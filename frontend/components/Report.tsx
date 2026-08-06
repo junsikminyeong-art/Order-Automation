@@ -226,7 +226,7 @@ export default function Report({ results, growthFactor, orderMonths, onClose }: 
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="size" angle={-45} textAnchor="end" height={80} />
                 <YAxis />
-                <Tooltip formatter={(v: number) => v.toLocaleString()} />
+                <Tooltip formatter={(v) => Number(v).toLocaleString()} />
                 <Legend />
                 <Bar dataKey="입고" fill="#86efac" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="재고" fill="#f97316" radius={[4, 4, 0, 0]} />
