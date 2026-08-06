@@ -49,6 +49,7 @@ function roundToUnit(qty: number, unit: number): number {
  */
 export function calculateOrders(
   model: string,
+  prefix: string,
   colors: string[],
   sizes: string[],
   salesData: SalesItem[],
@@ -130,7 +131,7 @@ export function calculateOrders(
       }
 
             results.push({
-        fullCode: `CQ-${model}-${color}`,
+        fullCode: `${prefix}-${model}-${color}`,
         model,
         color,
         size,

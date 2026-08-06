@@ -279,6 +279,7 @@ export default function Home() {
 
         const modelResults = calculateOrders(
           request.model,
+          request.prefix,
           request.colors,
           request.sizes,
           salesData,
@@ -956,6 +957,7 @@ async function readWorkbook(file: File): Promise<XLSX.WorkBook> {
 // ─── 발주 요청 파일 파싱 ───
 interface OrderRequest {
   model: string;
+  prefix: string;
   colors: string[];
   sizes: string[];
 }
@@ -970,6 +972,7 @@ function parseOrderRequest(workbook: XLSX.WorkBook): OrderRequest[] {
   const requests: OrderRequest[] = [];
   let currentSizes: string[] = [];
   let currentModel = "";
+  let currentPrefix = "";
   let currentColors: string[] = [];
 
   for (let r = 0; r < raw.length; r++) {
@@ -980,6 +983,7 @@ function parseOrderRequest(workbook: XLSX.WorkBook): OrderRequest[] {
       if (currentModel && currentColors.length > 0) {
         requests.push({
           model: currentModel,
+          prefix: currentPrefix,
           colors: [...currentColors],
           sizes: [...currentSizes],
         });
@@ -993,6 +997,7 @@ function parseOrderRequest(workbook: XLSX.WorkBook): OrderRequest[] {
         }
       }
       currentModel = "";
+      currentPrefix = "";
       currentColors = [];
       continue;
     }
@@ -1001,10 +1006,14 @@ function parseOrderRequest(workbook: XLSX.WorkBook): OrderRequest[] {
 
     const parts = firstCell.split("-");
     if (parts.length >= 3) {
+      const prefix = parts[0];
       const model = parts[1];
       const color = parts.slice(2).join("-");
 
-      if (!currentModel) currentModel = model;
+      if (!currentModel) {
+        currentModel = model;
+        currentPrefix = prefix;
+      }
       currentColors.push(color);
     }
   }
@@ -1012,6 +1021,7 @@ function parseOrderRequest(workbook: XLSX.WorkBook): OrderRequest[] {
   if (currentModel && currentColors.length > 0) {
     requests.push({
       model: currentModel,
+      prefix: currentPrefix,
       colors: currentColors,
       sizes: currentSizes,
     });
