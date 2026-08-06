@@ -125,7 +125,7 @@ export default function Report({ results, growthFactor, orderMonths, onClose }: 
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="color" />
                 <YAxis />
-                <Tooltip formatter={(v: number) => v.toLocaleString()} />
+                <Tooltip formatter={(v) => Number(v).toLocaleString()} />
                 <Legend />
                 <Bar dataKey="판매합계" fill="#93c5fd" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="발주합계" fill="#3b82f6" radius={[4, 4, 0, 0]} />
