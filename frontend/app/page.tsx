@@ -603,7 +603,7 @@ export default function Home() {
 
         </div>
 
-        {/* 패킹단위 설정 UI */}
+                {/* 패킹단위 설정 UI */}
         {packingInfos.length > 0 && (
           <div className="mt-4 space-y-4">
             {packingInfos.map((info, mi) => (
@@ -615,6 +615,21 @@ export default function Home() {
                   <h4 className="font-bold text-purple-800">
                     📦 {info.model} 패킹단위
                   </h4>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-purple-600">일괄 적용:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      defaultValue={30}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val > 0) updateAllUnits(mi, val);
+                      }}
+                      className="w-14 px-2 py-1 border border-purple-300 rounded-lg
+                                 text-center text-sm focus:outline-none
+                                 focus:ring-2 focus:ring-purple-400"
+                    />
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto">
