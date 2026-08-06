@@ -7,6 +7,7 @@
  * - W/L 형태: 28W/30L, 32W/32L, 40W/34L ...
  * - 의류 사이즈: S, M, L, XL, 2XL, 3XL ...
  * - 변형: L/Short, XL/Long, 2XL/Long, XL/Short ...
+ * - 숫자 사이즈: 28, 30, 32, 34, 95, 100, 105 ...
  */
 export function isSizeHeader(value: string): boolean {
   if (!value || typeof value !== "string") return false;
@@ -18,6 +19,9 @@ export function isSizeHeader(value: string): boolean {
 
   // 의류 사이즈: S, M, L, XL, 2XL, 3XL (+ /Short, /Long 등)
   if (/^(\d*X{0,3})?[SML](\/[A-Za-z]+)?$/i.test(v)) return true;
+
+  // 숫자만 있는 사이즈: 28, 30, 32, 95, 100, 105 등
+  if (/^\d{2,3}$/.test(v)) return true;
 
   return false;
 }
