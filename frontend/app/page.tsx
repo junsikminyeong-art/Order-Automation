@@ -791,9 +791,10 @@ export default function Home() {
         )}
 
         {/* ─── 계산 설정 ─── */}
+                {/* ─── 계산 설정 ─── */}
         <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <h3 className="text-sm font-bold text-gray-600 mb-3">⚙️ 계산 설정</h3>
-                    <div className="flex gap-6 flex-wrap">
+          <div className="flex gap-6 flex-wrap">
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">판매데이터 기간</label>
               <input
@@ -811,33 +812,6 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">발주 개월수</label>
-              <input
-                type="number"
-                step="1"
-                min="1"
-                max="24"
-                value={orderMonths}
-                onChange={(e) => setOrderMonths(Number(e.target.value))}
-                className="w-20 px-3 py-1.5 border border-gray-300 rounded-lg
-                           text-center text-gray-700 focus:outline-none
-                           focus:ring-2 focus:ring-blue-400"
-              />
-              <span className="text-xs text-gray-400">개월</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">성장계수</label>
-              <input
-                type="number"
-                step="0.1"
-                min="0.1"
-                value={growthFactor}
-                onChange={(e) => setGrowthFactor(Number(e.target.value))}
-                className="w-20 px-3 py-1.5 border border-gray-300 rounded-lg
-                           text-center text-gray-700 focus:outline-none
-                           focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-          </div>
               <input
                 type="number"
                 step="1"
