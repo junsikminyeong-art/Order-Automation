@@ -547,7 +547,7 @@ export default function Home() {
           {/* 판매데이터 */}
           <div>
             <p className="text-xs text-gray-400 mb-1">
-              📌 BMS &gt; 발주관리 &gt; 발주계산 &gt; 모델명 검색 &gt; 몰 주문일 최근 1년 설정 &gt; 판매수량 클릭 &gt; 그리드 데이터 엑셀파일 다운
+              📌 BMS &gt; 발주관리 &gt; 발주계산 &gt; 모델명 검색 &gt; 몰 주문일 기간 설정 &gt; 판매수량 클릭 &gt; 그리드 데이터 엑셀파일 다운
             </p>
                         <MultiFileDrop
               title="📊 판매데이터 (여러 모델 가능)"
