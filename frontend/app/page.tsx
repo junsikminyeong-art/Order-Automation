@@ -716,10 +716,10 @@ export default function Home() {
                     <input
                       type="number"
                       min="0"
-                      max="12"
+                      max={salesMonths}
                       defaultValue={0}
                       onChange={(e) => {
-                        const val = Number(e.target.value);
+                        const val = Math.min(Number(e.target.value), salesMonths);
                         if (val >= 0) updateAllOOS(mi, val);
                       }}
                       className="w-14 px-2 py-1 border border-red-300 rounded-lg
@@ -764,10 +764,10 @@ export default function Home() {
                             <input
                               type="number"
                               min="0"
-                              max="12"
+                              max={salesMonths}
                               defaultValue={0}
                               onChange={(e) => {
-                                const val = Number(e.target.value);
+                                const val = Math.min(Number(e.target.value), salesMonths);
                                 if (val >= 0) updateColorOOS(mi, color, val);
                               }}
                               className="w-12 px-1 py-1 border border-red-300
@@ -784,10 +784,10 @@ export default function Home() {
                               <input
                                 type="number"
                                 min="0"
-                                max="12"
+                                max={salesMonths}
                                 value={info.data[color]?.[size] ?? 0}
                                 onChange={(e) => {
-                                  const val = Number(e.target.value);
+                                  const val = Math.min(Number(e.target.value), salesMonths);
                                   if (val >= 0) updateSizeOOS(mi, color, size, val);
                                 }}
                                 className="w-12 px-1 py-1 border border-gray-300
