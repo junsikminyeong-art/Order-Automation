@@ -549,11 +549,28 @@ export default function Home() {
             <p className="text-xs text-gray-400 mb-1">
               📌 BMS &gt; 발주관리 &gt; 발주계산 &gt; 모델명 검색 &gt; 몰 주문일 최근 1년 설정 &gt; 판매수량 클릭 &gt; 그리드 데이터 엑셀파일 다운
             </p>
-            <MultiFileDrop
+                        <MultiFileDrop
               title="📊 판매데이터 (여러 모델 가능)"
               files={salesFiles}
               onFilesChange={setSalesFiles}
             />
+            {salesFiles.length > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <label className="text-sm text-gray-600">📅 판매데이터 기간:</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="24"
+                  value={salesMonths}
+                  onChange={(e) => setSalesMonths(Number(e.target.value))}
+                  className="w-16 px-2 py-1 border border-gray-300 rounded-lg
+                             text-center text-sm focus:outline-none
+                             focus:ring-2 focus:ring-blue-400"
+                />
+                <span className="text-xs text-gray-400">개월 (기본 12개월)</span>
+              </div>
+            )}
           </div>
 
           {/* BMS 재고 */}
@@ -795,21 +812,6 @@ export default function Home() {
         <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <h3 className="text-sm font-bold text-gray-600 mb-3">⚙️ 계산 설정</h3>
           <div className="flex gap-6 flex-wrap">
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">판매데이터 기간</label>
-              <input
-                type="number"
-                step="1"
-                min="1"
-                max="24"
-                value={salesMonths}
-                onChange={(e) => setSalesMonths(Number(e.target.value))}
-                className="w-20 px-3 py-1.5 border border-gray-300 rounded-lg
-                           text-center text-gray-700 focus:outline-none
-                           focus:ring-2 focus:ring-blue-400"
-              />
-              <span className="text-xs text-gray-400">개월</span>
-            </div>
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">발주 개월수</label>
               <input
