@@ -99,7 +99,7 @@ export function calculateOrders(
         // 판매데이터 = 최근 1년(365일) 중 품절기간 제외한 실제 판매기간 기준
         const outOfStockMonths = outOfStockData?.[color]?.[size] ?? 0;
         const outOfStockDays = outOfStockMonths * 30;
-        const salesPeriodDays = 365; // 판매데이터는 최근 1년
+        const salesPeriodDays = settings.salesMonths * 30;
         const effectiveSellingDays = Math.max(1, salesPeriodDays - outOfStockDays);
 
         // 일평균 = 판매수량 ÷ 실제판매가능일 (1년 기준)
@@ -164,6 +164,7 @@ export function getDefaultSettings(inboundDate: Date): CalcSettings {
     excludeColors: [],
     excludeSizes: [],
     minSalesThreshold: 0,
-    orderMonths: 12,           // ← 이 줄 추가 (기본 12개월)
+    orderMonths: 12,
+    salesMonths: 12,
   };
 }

@@ -73,6 +73,7 @@ export interface CalcSettings {
   excludeSizes: string[];     // 제외 사이즈
   minSalesThreshold: number;  // 최소 판매량 이하 제외 (기본 0)
   orderMonths: number;        // ← 이 줄 추가 (발주 개월수)
+  salesMonths: number;  // ← 추가
 }
 
 // ─── 입고 파일 + 날짜 쌍 ───
