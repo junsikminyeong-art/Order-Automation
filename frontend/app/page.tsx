@@ -711,6 +711,9 @@ export default function Home() {
                   <h4 className="font-bold text-red-800">
                     📅 {info.model} 품절기간 (개월)
                   </h4>
+                  <span className="text-xs text-red-400">
+                    ⚠️ 최대 {salesMonths}개월 (판매데이터 기간 이내)
+                  </span>
                   <div className="flex items-center gap-2">
                     <label className="text-sm text-red-600">전체 적용:</label>
                     <input
