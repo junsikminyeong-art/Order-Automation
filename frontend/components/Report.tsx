@@ -25,6 +25,22 @@ export default function Report({ results, growthFactor, orderMonths, onClose }: 
   // 클릭된 사이즈 (발주 근거 펼침용)
   const [expandedSize, setExpandedSize] = useState<string | null>(null);
 
+
+  // ─── 메모 ───
+  const [memo, setMemo] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("report-memo") || "";
+    }
+    return "";
+  });
+  const [memoSaved, setMemoSaved] = useState(false);
+
+  const handleSaveMemo = () => {
+    localStorage.setItem("report-memo", memo);
+    setMemoSaved(true);
+    setTimeout(() => setMemoSaved(false), 2000);
+  };
+
   const handleModelChange = (model: string) => {
     setSelectedModel(model);
     const newColors = [...new Set(results.filter((r) => r.model === model).map((r) => r.color))];
@@ -418,6 +434,36 @@ export default function Report({ results, growthFactor, orderMonths, onClose }: 
               </table>
             </div>
           </section>
+
+          {/* ═══ 메모 ═══ */}
+          <section className="mb-8">
+            <h2 className="text-lg font-bold mb-3 border-b pb-2">
+              📝 메모
+            </h2>
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="보고 시 참고할 내용을 메모하세요..."
+              className="w-full h-40 p-4 border border-gray-300 rounded-xl
+                         text-sm resize-y focus:outline-none focus:ring-2
+                         focus:ring-blue-400"
+            />
+            <div className="flex items-center gap-3 mt-2">
+              <button
+                onClick={handleSaveMemo}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700
+                           text-white font-semibold rounded-lg transition"
+              >
+                💾 메모 저장
+              </button>
+              {memoSaved && (
+                <span className="text-sm text-green-600 font-semibold">
+                  ✅ 저장되었습니다!
+                </span>
+              )}
+            </div>
+          </section>
+
 
           {/* 하단 닫기 */}
           <div className="mt-8 text-center">
