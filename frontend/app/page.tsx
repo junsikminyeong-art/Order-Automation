@@ -25,6 +25,7 @@ export default function Home() {
 
   // ─── 입고일 (파일별) ───
   const [inDates, setInDates] = useState<string[]>([]);
+    const [noInbound, setNoInbound] = useState(false);
 
   // ─── 계산 설정 ───
   const [growthFactor, setGrowthFactor] = useState<number>(1.2);
@@ -225,7 +226,7 @@ export default function Home() {
 
   // ─── 발주 계산 실행 ───
   const handleCalculate = async () => {
-    if (salesFiles.length === 0 || !stockFile || inFiles.length === 0 || !orderFile) return;
+    if (salesFiles.length === 0 || !stockFile || !orderFile) return;
 
     setLoading(true);
     setError("");
@@ -590,14 +591,34 @@ export default function Home() {
             <p className="text-xs text-gray-400 mb-1">
               📌 BMS &gt; 발주관리 &gt; 발주현황 &gt; 모델명 검색 &gt; 모델명 클릭 &gt; 가장 최근 입고예정일 P/O 클릭 &gt; 그리드 데이터 엑셀파일 다운
             </p>
-            <MultiFileDrop
-              title="🚚 최근 입고내역 (여러 파일 가능)"
-              files={inFiles}
-              onFilesChange={setInFiles}
-              showDates={true}
-              dates={inDates}
-              onDatesChange={setInDates}
-            />
+                        <div className="flex items-center gap-2 mb-1">
+              <input
+                type="checkbox"
+                id="noInbound"
+                checked={inFiles.length === 0 && noInbound}
+                onChange={(e) => {
+                  setNoInbound(e.target.checked);
+                  if (e.target.checked) {
+                    setInFiles([]);
+                    setInDates([]);
+                  }
+                }}
+                className="w-4 h-4 accent-blue-500"
+              />
+              <label htmlFor="noInbound" className="text-sm text-gray-600">
+                입고내역 없음 (참고 데이터 없이 계산)
+              </label>
+            </div>
+            {!noInbound && (
+              <MultiFileDrop
+                title="🚚 최근 입고내역 (여러 파일 가능)"
+                files={inFiles}
+                onFilesChange={setInFiles}
+                showDates={true}
+                dates={inDates}
+                onDatesChange={setInDates}
+              />
+            )}
           </div>
 
                     {/* 발주 요청 양식 */}
