@@ -105,6 +105,7 @@ export interface SavedResult {
   results: OrderResult[];
   growthFactor: number;
   orderMonths: number;
+  memo: string;
   summary: {
     sales: number;
     stock: number;

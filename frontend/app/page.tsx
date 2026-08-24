@@ -38,6 +38,9 @@ export default function Home() {
   // ─── 품절기간 ───
   const [outOfStockInfos, setOutOfStockInfos] = useState<OutOfStockInfo[]>([]);
 
+  // ─── 메모 ───
+  const [memo, setMemo] = useState("");
+
   // ─── 보고서 ───
   const [showReport, setShowReport] = useState(false);
 
@@ -187,6 +190,7 @@ export default function Home() {
   const handleLoadSaved = (saved: SavedResult) => {
     setResults(saved.results);
     setSummary(saved.summary);
+    setMemo(saved.memo || "");
     setViewingMode(true);
     setViewingName(saved.name);
   };
@@ -214,6 +218,7 @@ export default function Home() {
         results,
         growthFactor,
         orderMonths,
+        memo,
         summary,
       });
       setSaveTrigger((prev) => prev + 1);
@@ -981,6 +986,8 @@ export default function Home() {
             results={results}
             growthFactor={growthFactor}
             orderMonths={orderMonths}
+            memo={memo}
+            onMemoChange={setMemo}
             onClose={() => setShowReport(false)}
           />
         )}

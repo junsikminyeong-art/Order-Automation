@@ -11,11 +11,12 @@ type Props = {
   results: OrderResult[];
   growthFactor: number;
   orderMonths: number;
+  memo: string;
+  onMemoChange: (memo: string) => void;
   onClose: () => void;
 };
 
-export default function Report({ results, growthFactor, orderMonths, onClose }: Props) {
-  const models = [...new Set(results.map((r) => r.model))];
+export default function Report({ results, growthFactor, orderMonths, memo, onMemoChange, onClose }: Props) {
   const [selectedModel, setSelectedModel] = useState(models[0] || "");
 
   const modelItems = results.filter((r) => r.model === selectedModel);
@@ -436,32 +437,22 @@ export default function Report({ results, growthFactor, orderMonths, onClose }: 
           </section>
 
           {/* ═══ 메모 ═══ */}
+                    {/* ═══ 메모 ═══ */}
           <section className="mb-8">
             <h2 className="text-lg font-bold mb-3 border-b pb-2">
               📝 메모
             </h2>
             <textarea
               value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-              placeholder="보고 시 참고할 내용을 메모하세요..."
+              onChange={(e) => onMemoChange(e.target.value)}
+              placeholder="보고 시 참고할 내용을 메모하세요... (결과 저장 시 함께 저장됩니다)"
               className="w-full h-40 p-4 border border-gray-300 rounded-xl
                          text-sm resize-y focus:outline-none focus:ring-2
                          focus:ring-blue-400"
             />
-            <div className="flex items-center gap-3 mt-2">
-              <button
-                onClick={handleSaveMemo}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700
-                           text-white font-semibold rounded-lg transition"
-              >
-                💾 메모 저장
-              </button>
-              {memoSaved && (
-                <span className="text-sm text-green-600 font-semibold">
-                  ✅ 저장되었습니다!
-                </span>
-              )}
-            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              💡 메모는 "결과 저장" 버튼을 누를 때 함께 저장됩니다
+            </p>
           </section>
 
 

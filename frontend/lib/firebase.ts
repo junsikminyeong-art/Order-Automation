@@ -47,6 +47,7 @@ export async function saveResultToCloud(data: {
   results: any[];
   growthFactor: number;
   orderMonths: number;
+  memo: string;
   summary: any;
 }): Promise<string> {
   const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
