@@ -17,6 +17,7 @@ type Props = {
 };
 
 export default function Report({ results, growthFactor, orderMonths, memo, onMemoChange, onClose }: Props) {
+  const models = [...new Set(results.map((r) => r.model))];
   const [selectedModel, setSelectedModel] = useState(models[0] || "");
 
   const modelItems = results.filter((r) => r.model === selectedModel);
