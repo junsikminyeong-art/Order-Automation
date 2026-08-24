@@ -26,22 +26,6 @@ export default function Report({ results, growthFactor, orderMonths, memo, onMem
   // 클릭된 사이즈 (발주 근거 펼침용)
   const [expandedSize, setExpandedSize] = useState<string | null>(null);
 
-
-  // ─── 메모 ───
-  const [memo, setMemo] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("report-memo") || "";
-    }
-    return "";
-  });
-  const [memoSaved, setMemoSaved] = useState(false);
-
-  const handleSaveMemo = () => {
-    localStorage.setItem("report-memo", memo);
-    setMemoSaved(true);
-    setTimeout(() => setMemoSaved(false), 2000);
-  };
-
   const handleModelChange = (model: string) => {
     setSelectedModel(model);
     const newColors = [...new Set(results.filter((r) => r.model === model).map((r) => r.color))];
@@ -437,7 +421,6 @@ export default function Report({ results, growthFactor, orderMonths, memo, onMem
           </section>
 
           {/* ═══ 메모 ═══ */}
-                    {/* ═══ 메모 ═══ */}
           <section className="mb-8">
             <h2 className="text-lg font-bold mb-3 border-b pb-2">
               📝 메모
