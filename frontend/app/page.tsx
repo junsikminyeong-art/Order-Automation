@@ -769,8 +769,7 @@ export default function Home() {
                           색상
                         </th>
                         <th className="border border-red-200 px-2 py-1 bg-red-100
-                                       text-red-700 text-center whitespace-nowrap
-                                       sticky left-[52px] z-10 bg-red-100">
+                                       text-red-700 text-center whitespace-nowrap">
                           일괄
                         </th>
                         {info.sizes.map((size) => (
@@ -793,8 +792,7 @@ export default function Home() {
                                          sticky left-0 z-10 bg-red-50">
                             {color}
                           </td>
-                          <td className="border border-red-200 px-1 py-1
-                                         sticky left-[52px] z-10 bg-red-50">
+                          <td className="border border-red-200 px-1 py-1">
                             <input
                               type="number"
                               min="0"
