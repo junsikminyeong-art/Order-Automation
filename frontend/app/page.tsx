@@ -357,6 +357,7 @@ export default function Home() {
                   <ul className="list-disc pl-5 text-gray-600 space-y-1">
                     <li>여러 모델을 한 번에 업로드할 수 있습니다.</li>
                     <li>발주수량 계산의 기준이 되는 가장 중요한 데이터입니다.</li>
+                    <li>발주모델 색상이 예를들어 ZZBLK인 경우, 1기 기준 ZZBLK + BLK + JPBLK 판매수량을 합산하여 집계합니다.</li>
                   </ul>
                 </section>
                 <hr />
