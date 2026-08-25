@@ -94,32 +94,35 @@ export function parseSalesData(
  * 판매 데이터에서 특정 색상의 판매수량 조회
  * ZZ 우선 로직: 발주요청이 "BLK"면 → "ZZBLK" 먼저 찾고, 없으면 "BLK"
  */
+/**
+ * 색상에서 접두어(ZZ, JP 등) 제거 → 기본 색상 추출
+ * "ZZBLK" → "BLK", "JPBLK" → "BLK", "BLK" → "BLK"
+ */
+function getBaseColor(color: string): string {
+  return color.replace(/^(ZZ|JP|KR|US|EU|CN|HK|TW)/i, "");
+}
+
+/**
+ * 판매 데이터에서 특정 색상의 판매수량 조회
+ * 기본 색상이 같은 모든 변형을 합산
+ * 예: 발주양식 "BLK" → ZZBLK + BLK + JPBLK 전부 합산
+ */
 export function findSalesQty(
   salesData: SalesItem[],
   model: string,
   requestColor: string,
   size: string
 ): { qty: number; matchedColor: string } {
-  // 1단계: 요청 색상에서 ZZ 제거한 기본 색상 추출
-  const baseColor = requestColor.replace(/^ZZ/i, "");
+  const baseColor = getBaseColor(requestColor);
 
-  // 2단계: ZZ 버전 먼저 찾기
-  const zzColor = `ZZ${baseColor}`;
-  const zzMatch = salesData.find(
-    (s) => s.model === model && s.color === zzColor && s.size === size
-  );
-  if (zzMatch) {
-    return { qty: zzMatch.qty, matchedColor: zzColor };
+  // 기본 색상이 같은 모든 항목 합산
+  let totalQty = 0;
+  for (const s of salesData) {
+    if (s.model !== model || s.size !== size) continue;
+    if (getBaseColor(s.color) === baseColor) {
+      totalQty += s.qty;
+    }
   }
 
-  // 3단계: ZZ 없으면 공용(기본) 색상으로
-  const baseMatch = salesData.find(
-    (s) => s.model === model && s.color === baseColor && s.size === size
-  );
-  if (baseMatch) {
-    return { qty: baseMatch.qty, matchedColor: baseColor };
-  }
-
-  // 못 찾으면 0
-  return { qty: 0, matchedColor: requestColor };
+  return { qty: totalQty, matchedColor: requestColor };
 }
