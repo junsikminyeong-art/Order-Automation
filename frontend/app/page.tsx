@@ -191,6 +191,8 @@ export default function Home() {
     setResults(saved.results);
     setSummary(saved.summary);
     setMemo(saved.memo || "");
+    setOrderMonths(saved.orderMonths || 12);
+    setGrowthFactor(saved.growthFactor || 1.2);
     setViewingMode(true);
     setViewingName(saved.name);
   };
