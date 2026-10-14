@@ -57,7 +57,9 @@ export function calculateOrders(
   inboundData: InboundItem[],
   settings: CalcSettings,
   packingUnits?: { [size: string]: number },
-  outOfStockData?: { [color: string]: { [size: string]: number } }
+  outOfStockData?: { [color: string]: { [size: string]: number } },
+  seasonType: "allseason" | "season" = "allseason",
+  seasonMonths: number = 6
 ): OrderResult[] {
   const results: OrderResult[] = [];
   const elapsedDays = getElapsedDays(settings.inboundDate);
@@ -96,15 +98,21 @@ export function calculateOrders(
 
       if (!skip) {
                         // 품절기간 보정
-        // 판매데이터 = 최근 1년(365일) 중 품절기간 제외한 실제 판매기간 기준
         const outOfStockMonths = outOfStockData?.[color]?.[size] ?? 0;
         const outOfStockDays = outOfStockMonths * 30;
-        const salesPeriodDays = settings.salesMonths * 30;
-        const effectiveSellingDays = Math.max(1, salesPeriodDays - outOfStockDays);
 
-        // 일평균 = 판매수량 ÷ 실제판매가능일 (1년 기준)
-        // 판매예상 = 일평균 × 발주개월수 × 30일
-        annualEstimate = (sales.qty / effectiveSellingDays) * (settings.orderMonths * 30);
+        if (seasonType === "season") {
+          // ─── 시즌 상품 계산 ───
+          const seasonDays = seasonMonths * 30;
+          const effectiveSellingDays = Math.max(1, seasonDays - outOfStockDays);
+          const dailyAvg = sales.qty / effectiveSellingDays;
+          annualEstimate = dailyAvg * seasonDays;
+        } else {
+          // ─── 사계절 상품 계산 (기존) ───
+          const salesPeriodDays = settings.salesMonths * 30;
+          const effectiveSellingDays = Math.max(1, salesPeriodDays - outOfStockDays);
+          annualEstimate = (sales.qty / effectiveSellingDays) * (settings.orderMonths * 30);
+        }
 
         // 성장계수 적용
         growthApplied = annualEstimate * settings.growthFactor;

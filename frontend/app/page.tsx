@@ -14,7 +14,7 @@ import { parseInboundData } from "../lib/inbound";
 import { calculateOrders, getDefaultSettings } from "../lib/calculate";
 import { exportOrderExcel } from "../lib/export";
 import { isSizeHeader } from "../lib/utils";
-import { SalesItem, StockItem, InboundItem, OrderResult, PackingInfo, OutOfStockInfo } from "../types";
+import { SalesItem, StockItem, InboundItem, OrderResult, PackingInfo, OutOfStockInfo, SeasonInfo } from "../types";
 
 export default function Home() {
   // ─── 파일 상태 ───
@@ -37,6 +37,9 @@ export default function Home() {
 
   // ─── 품절기간 ───
   const [outOfStockInfos, setOutOfStockInfos] = useState<OutOfStockInfo[]>([]);
+
+    // ─── 시즌 정보 ───
+  const [seasonInfos, setSeasonInfos] = useState<SeasonInfo[]>([]);
 
   // ─── 메모 ───
   const [memo, setMemo] = useState("");
@@ -112,6 +115,13 @@ export default function Home() {
         }, {} as { [color: string]: { [size: string]: number } }),
       }));
       setOutOfStockInfos(oosInfos);
+            // 시즌 정보 초기화 (기본: 사계절)
+      const sInfos: SeasonInfo[] = requests.map((req) => ({
+        model: req.model,
+        type: "allseason" as const,
+        seasonMonths: 6,
+      }));
+      setSeasonInfos(sInfos);
     } catch (err) {
       console.error("발주 요청 파일 파싱 오류:", err);
     }
@@ -286,6 +296,7 @@ export default function Home() {
 
                 // 해당 모델의 품절기간 데이터 찾기
         const modelOOS = outOfStockInfos.find((o) => o.model === request.model);
+        const modelSeason = seasonInfos.find((s) => s.model === request.model);
 
         const modelResults = calculateOrders(
           request.model,
@@ -297,7 +308,9 @@ export default function Home() {
           inboundData,
           settings,
           modelPacking?.units,
-          modelOOS?.data
+          modelOOS?.data,
+          modelSeason?.type || "allseason",
+          modelSeason?.seasonMonths || 6
         );
         allResults.push(...modelResults);
       }
@@ -653,6 +666,85 @@ export default function Home() {
 
         </div>
 
+        {/* 시즌 설정 UI */}
+        {seasonInfos.length > 0 && (
+          <div className="mt-4 space-y-4">
+            {seasonInfos.map((info, mi) => (
+              <div
+                key={mi}
+                className="rounded-xl border border-blue-200 bg-blue-50 p-4"
+              >
+                <h4 className="font-bold text-blue-800 mb-3">
+                  📦 {info.model} 상품 유형
+                </h4>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`season-${mi}`}
+                      checked={info.type === "allseason"}
+                      onChange={() => {
+                        setSeasonInfos((prev) => {
+                          const updated = [...prev];
+                          updated[mi] = { ...updated[mi], type: "allseason" };
+                          return updated;
+                        });
+                      }}
+                      className="w-4 h-4 accent-blue-500"
+                    />
+                    <span className="text-sm font-semibold">사계절 상품</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`season-${mi}`}
+                      checked={info.type === "season"}
+                      onChange={() => {
+                        setSeasonInfos((prev) => {
+                          const updated = [...prev];
+                          updated[mi] = { ...updated[mi], type: "season" };
+                          return updated;
+                        });
+                      }}
+                      className="w-4 h-4 accent-blue-500"
+                    />
+                    <span className="text-sm font-semibold">시즌 상품</span>
+                  </label>
+                  {info.type === "season" && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-blue-600">시즌 기간:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="12"
+                        value={info.seasonMonths}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          if (val > 0 && val <= 12) {
+                            setSeasonInfos((prev) => {
+                              const updated = [...prev];
+                              updated[mi] = { ...updated[mi], seasonMonths: val };
+                              return updated;
+                            });
+                          }
+                        }}
+                        className="w-16 px-2 py-1 border border-blue-300 rounded-lg
+                                   text-center text-sm focus:outline-none
+                                   focus:ring-2 focus:ring-blue-400"
+                      />
+                      <span className="text-xs text-blue-500">개월</span>
+                    </div>
+                  )}
+                </div>
+                {info.type === "season" && (
+                  <p className="text-xs text-blue-400 mt-2">
+                    ⚠️ 품절기간은 시즌 내 품절만 입력하세요. 비시즌 품절은 입력하지 않아도 됩니다.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
                 {/* 패킹단위 설정 UI */}
         {packingInfos.length > 0 && (
           <div className="mt-4 space-y-4">
@@ -749,7 +841,7 @@ export default function Home() {
                     <input
                       type="number"
                       min="0"
-                      max={salesMonths}
+                      max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : salesMonths}
                       defaultValue={0}
                       onChange={(e) => {
                         const val = Math.min(Number(e.target.value), salesMonths);
@@ -799,7 +891,7 @@ export default function Home() {
                             <input
                               type="number"
                               min="0"
-                              max={salesMonths}
+                              max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : salesMonths}
                               defaultValue={0}
                               onChange={(e) => {
                                 const val = Math.min(Number(e.target.value), salesMonths);
@@ -819,7 +911,7 @@ export default function Home() {
                               <input
                                 type="number"
                                 min="0"
-                                max={salesMonths}
+                                max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : salesMonths}
                                 value={info.data[color]?.[size] ?? 0}
                                 onChange={(e) => {
                                   const val = Math.min(Number(e.target.value), salesMonths);

@@ -97,6 +97,12 @@ export interface OutOfStockInfo {
   data: { [color: string]: { [size: string]: number } }; // 개월 단위
 }
 
+// ─── 시즌 정보 (모델별) ───
+export interface SeasonInfo {
+  model: string;
+  type: "allseason" | "season";
+  seasonMonths: number;
+}
 // ─── 저장된 발주 결과 ───
 export interface SavedResult {
   id: string;
