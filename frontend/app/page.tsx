@@ -1079,7 +1079,47 @@ export default function Home() {
                           const sStart = modelSeason?.type === "season" ? modelSeason.seasonStart : null;
                           const sEnd = modelSeason?.type === "season" ? modelSeason.seasonEnd : null;
                           const oosResult = calculateOutOfStock(wb, sStart, sEnd, modelSeason?.salesMonths || 12);
-                          const modelOOS =
+                                                    const oosResult2 = calculateOutOfStock(wb, sStart, sEnd, modelSeason?.salesMonths || 12);
+                          const modelOOS = oosResult2[info.model];
+                          if (modelOOS) {
+                            setOutOfStockInfos((prev) => {
+                              const updated = [...prev];
+                              const current = { ...updated[mi] };
+                              current.data = { ...current.data };
+                              for (const color of current.colors) {
+                                current.data[color] = { ...current.data[color] };
+                                for (const size of current.sizes) {
+                                  if (modelOOS[color]?.[size] !== undefined) {
+                                    current.data[color][size] = modelOOS[color][size];
+                                  }
+                                }
+                              }
+                              updated[mi] = current;
+                              return updated;
+                            });
+                            alert(`${info.model} 품절기간 자동 입력 완료!`);
+                          } else {
+                            alert(`${info.model} 데이터를 찾을 수 없습니다.`);
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          alert("파일 파싱 오류");
+                        }
+                      };
+                      input.click();
+                    }}
+                    className="px-4 py-2 border-2 border-dashed border-red-300 rounded-lg
+                               bg-red-50 hover:bg-red-100 cursor-pointer transition
+                               text-center"
+                  >
+                    <p className="text-xs font-semibold text-red-600">
+                      📂 재고이력 파일을 드래그하거나 클릭하여 업로드
+                    </p>
+                    <p className="text-xs text-red-400 mt-1">
+                      업로드 시 품절기간이 자동으로 계산됩니다 (.xlsx)
+                    </p>
+                  </div>
+                  <span className="text-xs text-red-400">
                     ⚠️ 최대 {salesMonths}개월 (판매데이터 기간 이내)
                   </span>
                   <div className="flex items-center gap-2">
