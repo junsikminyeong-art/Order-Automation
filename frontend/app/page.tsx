@@ -11,6 +11,7 @@ import Report from "../components/Report";
 import { parseSalesData } from "../lib/sales";
 import { parseStockData } from "../lib/stock";
 import { parseInboundData } from "../lib/inbound";
+import { calculateOutOfStock } from "../lib/stockHistory";
 import { calculateOrders, getDefaultSettings } from "../lib/calculate";
 import { exportOrderExcel } from "../lib/export";
 import { isSizeHeader } from "../lib/utils";
@@ -1020,10 +1021,65 @@ export default function Home() {
                 className="rounded-xl border border-red-200 bg-red-50 p-4"
               >
                 <div className="flex items-center gap-4 mb-3">
-                  <h4 className="font-bold text-red-800">
+                                    <h4 className="font-bold text-red-800">
                     📅 {info.model} 품절기간 (개월)
                   </h4>
-                  <span className="text-xs text-red-400">
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-red-400"); }}
+                    onDragLeave={(e) => { e.currentTarget.classList.remove("ring-2", "ring-red-400"); }}
+                    onDrop={async (e) => {
+                      e.preventDefault();
+                      e.currentTarget.classList.remove("ring-2", "ring-red-400");
+                      const file = e.dataTransfer.files[0];
+                      if (!file) return;
+                      try {
+                        const data = await file.arrayBuffer();
+                        const wb = XLSX.read(data);
+                        const modelSeason = seasonInfos[mi];
+                        const sStart = modelSeason?.type === "season" ? modelSeason.seasonStart : null;
+                        const sEnd = modelSeason?.type === "season" ? modelSeason.seasonEnd : null;
+                        const oosResult = calculateOutOfStock(wb, sStart, sEnd, modelSeason?.salesMonths || 12);
+                        const modelOOS = oosResult[info.model];
+                        if (modelOOS) {
+                          setOutOfStockInfos((prev) => {
+                            const updated = [...prev];
+                            const current = { ...updated[mi] };
+                            current.data = { ...current.data };
+                            for (const color of current.colors) {
+                              current.data[color] = { ...current.data[color] };
+                              for (const size of current.sizes) {
+                                if (modelOOS[color]?.[size] !== undefined) {
+                                  current.data[color][size] = modelOOS[color][size];
+                                }
+                              }
+                            }
+                            updated[mi] = current;
+                            return updated;
+                          });
+                          alert(`${info.model} 품절기간 자동 입력 완료!`);
+                        } else {
+                          alert(`${info.model} 데이터를 찾을 수 없습니다.`);
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        alert("파일 파싱 오류");
+                      }
+                    }}
+                    onClick={() => {
+                      const input = document.createElement("input");
+                      input.type = "file";
+                      input.accept = ".xlsx,.xls";
+                      input.onchange = async (e: any) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const fileData = await file.arrayBuffer();
+                          const wb = XLSX.read(fileData);
+                          const modelSeason = seasonInfos[mi];
+                          const sStart = modelSeason?.type === "season" ? modelSeason.seasonStart : null;
+                          const sEnd = modelSeason?.type === "season" ? modelSeason.seasonEnd : null;
+                          const oosResult = calculateOutOfStock(wb, sStart, sEnd, modelSeason?.salesMonths || 12);
+                          const modelOOS =
                     ⚠️ 최대 {salesMonths}개월 (판매데이터 기간 이내)
                   </span>
                   <div className="flex items-center gap-2">
