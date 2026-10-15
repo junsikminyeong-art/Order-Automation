@@ -292,12 +292,12 @@ export default function Home() {
         const settings = getDefaultSettings(modelDate);
         settings.growthFactor = growthFactor;
         settings.orderMonths = orderMonths;
-        settings.salesMonths = modelSeason?.salesMonths || 12;  // ← 추가
         const modelPacking = packingInfos.find((p) => p.model === request.model);
 
                 // 해당 모델의 품절기간 데이터 찾기
         const modelOOS = outOfStockInfos.find((o) => o.model === request.model);
         const modelSeason = seasonInfos.find((s) => s.model === request.model);
+        settings.salesMonths = modelSeason?.salesMonths || 12;
 
         const modelResults = calculateOrders(
           request.model,
