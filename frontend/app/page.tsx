@@ -121,6 +121,7 @@ export default function Home() {
         type: "allseason" as const,
         seasonMonths: 6,
         salesMonths: 12,
+        monthlySales: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       }));
       setSeasonInfos(sInfos);
     } catch (err) {
@@ -751,6 +752,91 @@ export default function Home() {
                   <p className="text-xs text-blue-400 mt-2">
                     ⚠️ 품절기간은 시즌 내 품절만 입력하세요. 비시즌 품절은 입력하지 않아도 됩니다.
                   </p>
+                )}
+
+                {/* 월별 판매량 입력 */}
+                {info.type === "season" && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-sm font-semibold text-blue-700">
+                        📊 월별 판매량 (모델 전체 기준)
+                      </h5>
+                      {info.monthlySales.some((v) => v > 0) && (
+                        <span className="text-xs text-green-600 font-semibold">
+                          ✅ 시즌 자동 판단:{" "}
+                          {(() => {
+                            const avg = info.monthlySales.reduce((a, b) => a + b, 0) / 12;
+                            const seasonMs = info.monthlySales
+                              .map((v, i) => (v >= avg ? i + 1 : null))
+                              .filter((v) => v !== null);
+                            if (seasonMs.length === 0) return "판매 데이터 없음";
+                            return `${seasonMs[0]}~${seasonMs[seasonMs.length - 1]}월 (${seasonMs.length}개월)`;
+                          })()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-6 gap-2">
+                      {["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"].map((label, i) => {
+                        const avg = info.monthlySales.reduce((a, b) => a + b, 0) / 12;
+                        const isSeason = info.monthlySales[i] >= avg && info.monthlySales[i] > 0;
+                        return (
+                          <div key={i} className="flex flex-col items-center">
+                            <label className={`text-xs mb-1 font-semibold ${isSeason ? "text-blue-700" : "text-gray-400"}`}>
+                              {label} {isSeason ? "🔥" : ""}
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={info.monthlySales[i] || ""}
+                              placeholder="0"
+                              onChange={(e) => {
+                                const val = Number(e.target.value) || 0;
+                                setSeasonInfos((prev) => {
+                                  const updated = [...prev];
+                                  const newMonthly = [...updated[mi].monthlySales];
+                                  newMonthly[i] = val;
+                                  updated[mi] = { ...updated[mi], monthlySales: newMonthly };
+                                  return updated;
+                                });
+                              }}
+                              className={`w-full px-1 py-1 border rounded text-center text-sm
+                                focus:outline-none focus:ring-2 focus:ring-blue-400
+                                ${isSeason ? "border-blue-400 bg-blue-50" : "border-gray-300"}`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const ms = info.monthlySales;
+                          const avg = ms.reduce((a, b) => a + b, 0) / 12;
+                          const seasonMs = ms
+                            .map((v, i) => (v >= avg && v > 0 ? i : null))
+                            .filter((v) => v !== null) as number[];
+                          if (seasonMs.length > 0) {
+                            setSeasonInfos((prev) => {
+                              const updated = [...prev];
+                              updated[mi] = {
+                                ...updated[mi],
+                                seasonMonths: seasonMs.length,
+                              };
+                              return updated;
+                            });
+                          }
+                        }}
+                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white
+                                   text-xs font-semibold rounded-lg transition"
+                      >
+                        🔄 시즌 기간 자동 적용
+                      </button>
+                      <p className="text-xs text-gray-400 flex items-center">
+                        월평균 이상인 달을 시즌으로 판단합니다
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             ))}

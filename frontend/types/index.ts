@@ -103,6 +103,7 @@ export interface SeasonInfo {
   type: "allseason" | "season";
   seasonMonths: number;
   salesMonths: number;
+  monthlySales: number[];  // 1~12월 판매량 (index 0=1월, 11=12월)
 }
 // ─── 저장된 발주 결과 ───
 export interface SavedResult {
