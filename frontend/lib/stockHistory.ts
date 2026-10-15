@@ -120,7 +120,11 @@ export function calculateOutOfStock(
     const lastRec = recs[recs.length - 1];
     if (lastRec.qty === 0) {
       const start = lastRec.date;
-      const end = new Date();
+      // 시즌 종료월이 있으면 시즌 끝까지, 없으면 현재 날짜
+      const now = new Date();
+      const end = seasonEnd !== null
+        ? new Date(now.getFullYear(), seasonEnd, 0)  // 시즌 종료월 말일
+        : now;
 
       if (seasonStart !== null && seasonEnd !== null) {
         let current = new Date(start);
