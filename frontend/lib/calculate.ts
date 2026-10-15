@@ -100,8 +100,7 @@ export function calculateOrders(
 
       if (!skip) {
         // 품절기간 보정
-        const outOfStockMonths = outOfStockData?.[color]?.[size] ?? 0;
-        const outOfStockDays = outOfStockMonths * 30;
+          const outOfStockDays = outOfStockData?.[color]?.[size] ?? 0;
 
                 if (seasonType === "season") {
           // 시즌 월 목록 계산 (예: 3~10월 또는 11~2월 같은 연도 넘기는 경우도 처리)

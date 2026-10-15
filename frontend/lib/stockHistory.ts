@@ -141,11 +141,9 @@ export function calculateOutOfStock(
     }
 
     // 일수 → 개월 (반올림)
-    const outOfStockMonths = Math.round(outOfStockDays / 30);
-
-    if (!result[model]) result[model] = {};
+        if (!result[model]) result[model] = {};
     if (!result[model][color]) result[model][color] = {};
-    result[model][color][size] = outOfStockMonths;
+    result[model][color][size] = Math.round(outOfStockDays);
   }
 
   return result;
