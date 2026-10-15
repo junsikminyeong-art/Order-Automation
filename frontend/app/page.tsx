@@ -119,7 +119,8 @@ export default function Home() {
       const sInfos: SeasonInfo[] = requests.map((req) => ({
         model: req.model,
         type: "allseason" as const,
-        seasonMonths: 6,
+        seasonStart: 3,
+        seasonEnd: 10,
         salesMonths: 12,
         monthlySales: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       }));
@@ -312,7 +313,8 @@ export default function Home() {
           modelPacking?.units,
           modelOOS?.data,
           modelSeason?.type || "allseason",
-          modelSeason?.seasonMonths || 6,
+          modelSeason?.seasonStart || 3,
+          modelSeason?.seasonEnd || 10,
           modelSeason?.monthlySales || []
         );
         allResults.push(...modelResults);
@@ -822,27 +824,47 @@ export default function Home() {
                   </label>
                   {info.type === "season" && (
                     <div className="flex items-center gap-2">
-                      <label className="text-sm text-blue-600">시즌 기간:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="12"
-                        value={info.seasonMonths}
+                      <label className="text-sm text-blue-600">시즌:</label>
+                      <select
+                        value={info.seasonStart}
                         onChange={(e) => {
-                          const val = Number(e.target.value);
-                          if (val > 0 && val <= 12) {
-                            setSeasonInfos((prev) => {
-                              const updated = [...prev];
-                              updated[mi] = { ...updated[mi], seasonMonths: val };
-                              return updated;
-                            });
-                          }
+                          setSeasonInfos((prev) => {
+                            const updated = [...prev];
+                            updated[mi] = { ...updated[mi], seasonStart: Number(e.target.value) };
+                            return updated;
+                          });
                         }}
-                        className="w-16 px-2 py-1 border border-blue-300 rounded-lg
-                                   text-center text-sm focus:outline-none
-                                   focus:ring-2 focus:ring-blue-400"
-                      />
-                      <span className="text-xs text-blue-500">개월</span>
+                        className="px-2 py-1 border border-blue-300 rounded-lg
+                                   text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      >
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map((m) => (
+                          <option key={m} value={m}>{m}월</option>
+                        ))}
+                      </select>
+                      <span className="text-sm text-blue-600">~</span>
+                      <select
+                        value={info.seasonEnd}
+                        onChange={(e) => {
+                          setSeasonInfos((prev) => {
+                            const updated = [...prev];
+                            updated[mi] = { ...updated[mi], seasonEnd: Number(e.target.value) };
+                            return updated;
+                          });
+                        }}
+                        className="px-2 py-1 border border-blue-300 rounded-lg
+                                   text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      >
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map((m) => (
+                          <option key={m} value={m}>{m}월</option>
+                        ))}
+                      </select>
+                      <span className="text-xs text-blue-500">
+                        ({(() => {
+                          const s = info.seasonStart;
+                          const e = info.seasonEnd;
+                          return s <= e ? e - s + 1 : 12 - s + 1 + e;
+                        })()}개월)
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1036,7 +1058,7 @@ export default function Home() {
                     <input
                       type="number"
                       min="0"
-                      max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : seasonInfos[mi]?.salesMonths || 12}
+                      max={seasonInfos[mi]?.type === "season" ? (() => { const s = seasonInfos[mi]?.seasonStart || 3; const e = seasonInfos[mi]?.seasonEnd || 10; return s <= e ? e - s + 1 : 12 - s + 1 + e; })() : seasonInfos[mi]?.salesMonths || 12}
                       defaultValue={0}
                       onChange={(e) => {
                         const val = Math.min(Number(e.target.value), salesMonths);

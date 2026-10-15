@@ -101,9 +101,10 @@ export interface OutOfStockInfo {
 export interface SeasonInfo {
   model: string;
   type: "allseason" | "season";
-  seasonMonths: number;
+  seasonStart: number;
+  seasonEnd: number;
   salesMonths: number;
-  monthlySales: number[];  // 1~12월 판매량 (index 0=1월, 11=12월)
+  monthlySales: number[];
 }
 // ─── 저장된 발주 결과 ───
 export interface SavedResult {

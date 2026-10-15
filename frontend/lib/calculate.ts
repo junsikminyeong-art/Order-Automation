@@ -59,7 +59,8 @@ export function calculateOrders(
   packingUnits?: { [size: string]: number },
   outOfStockData?: { [color: string]: { [size: string]: number } },
   seasonType: "allseason" | "season" = "allseason",
-  seasonMonths: number = 6,
+  seasonStart: number = 3,
+  seasonEnd: number = 10,
   monthlySales: number[] = []
 ): OrderResult[] {
   const results: OrderResult[] = [];
@@ -102,23 +103,25 @@ export function calculateOrders(
         const outOfStockMonths = outOfStockData?.[color]?.[size] ?? 0;
         const outOfStockDays = outOfStockMonths * 30;
 
-        if (seasonType === "season") {
-          const seasonDays = seasonMonths * 30;
-          const nonSeasonMonthCount = 12 - seasonMonths;
+                if (seasonType === "season") {
+          // 시즌 월 목록 계산 (예: 3~10월 또는 11~2월 같은 연도 넘기는 경우도 처리)
+          const seasonMonthIndices: number[] = [];
+          if (seasonStart <= seasonEnd) {
+            for (let m = seasonStart; m <= seasonEnd; m++) seasonMonthIndices.push(m - 1);
+          } else {
+            for (let m = seasonStart; m <= 12; m++) seasonMonthIndices.push(m - 1);
+            for (let m = 1; m <= seasonEnd; m++) seasonMonthIndices.push(m - 1);
+          }
+
+          const seasonMonthCount = seasonMonthIndices.length;
+          const nonSeasonMonthCount = 12 - seasonMonthCount;
+          const seasonDays = seasonMonthCount * 30;
           const nonSeasonDays = nonSeasonMonthCount * 30;
 
-          // 월별 데이터가 있으면 B방식 (시즌/비시즌 분리)
           const hasMonthlySales = monthlySales.length === 12 && monthlySales.some((v) => v > 0);
 
           if (hasMonthlySales) {
             // ─── B방식: 시즌/비시즌 분리 계산 ───
-            // 판매량 높은 순으로 정렬 → 상위 N개월 = 시즌
-            const indexed = monthlySales.map((v, i) => ({ month: i, sales: v }));
-            indexed.sort((a, b) => b.sales - a.sales);
-            const seasonMonthIndices = new Set(
-              indexed.slice(0, seasonMonths).map((m) => m.month)
-            );
-
             const totalMonthly = monthlySales.reduce((a, b) => a + b, 0);
             let seasonMonthlyTotal = 0;
             for (const i of seasonMonthIndices) {
@@ -126,11 +129,9 @@ export function calculateOrders(
             }
             const nonSeasonMonthlyTotal = totalMonthly - seasonMonthlyTotal;
 
-            // 비율 계산
             const seasonRatio = totalMonthly > 0 ? seasonMonthlyTotal / totalMonthly : 1;
             const nonSeasonRatio = totalMonthly > 0 ? nonSeasonMonthlyTotal / totalMonthly : 0;
 
-            // 색상/사이즈별 판매수량을 비율로 분리
             const seasonSalesQty = sales.qty * seasonRatio;
             const nonSeasonSalesQty = sales.qty * nonSeasonRatio;
 
@@ -139,7 +140,7 @@ export function calculateOrders(
             const seasonDailyAvg = seasonSalesQty / effectiveSeasonDays;
             const seasonNeed = seasonDailyAvg * seasonDays;
 
-            // 비시즌 계산 (품절 없다고 가정)
+            // 비시즌 계산
             const nonSeasonNeed = nonSeasonDays > 0 ? nonSeasonSalesQty : 0;
 
             annualEstimate = seasonNeed + nonSeasonNeed;
@@ -149,11 +150,6 @@ export function calculateOrders(
             const dailyAvg = sales.qty / effectiveSellingDays;
             annualEstimate = dailyAvg * seasonDays;
           }
-        } else {
-          // ─── 사계절 상품 계산 (기존) ───
-          const salesPeriodDays = settings.salesMonths * 30;
-          const effectiveSellingDays = Math.max(1, salesPeriodDays - outOfStockDays);
-          annualEstimate = (sales.qty / effectiveSellingDays) * (settings.orderMonths * 30);
         }
 
         // 성장계수 적용
