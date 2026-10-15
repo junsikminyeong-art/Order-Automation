@@ -882,28 +882,13 @@ export default function Home() {
                       <h5 className="text-sm font-semibold text-blue-700">
                         📊 월별 판매량 (모델 전체 기준)
                       </h5>
-                      {info.monthlySales.some((v) => v > 0) && (
-                        <span className="text-xs text-green-600 font-semibold">
-                          ✅ 시즌 자동 판단:{" "}
-                          {(() => {
-                            const avg = info.monthlySales.reduce((a, b) => a + b, 0) / 12;
-                            const seasonMs = info.monthlySales
-                              .map((v, i) => (v >= avg ? i + 1 : null))
-                              .filter((v) => v !== null);
-                            if (seasonMs.length === 0) return "판매 데이터 없음";
-                            return `${seasonMs[0]}~${seasonMs[seasonMs.length - 1]}월 (${seasonMs.length}개월)`;
-                          })()}
-                        </span>
-                      )}
                     </div>
                     <div className="grid grid-cols-6 gap-2">
                       {["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"].map((label, i) => {
-                        const avg = info.monthlySales.reduce((a, b) => a + b, 0) / 12;
-                        const isSeason = info.monthlySales[i] >= avg && info.monthlySales[i] > 0;
                         return (
                           <div key={i} className="flex flex-col items-center">
-                            <label className={`text-xs mb-1 font-semibold ${isSeason ? "text-blue-700" : "text-gray-400"}`}>
-                              {label} {isSeason ? "🔥" : ""}
+                            <label className="text-xs mb-1 font-semibold text-gray-600">
+                              {label}
                             </label>
                             <input
                               type="number"
@@ -920,9 +905,8 @@ export default function Home() {
                                   return updated;
                                 });
                               }}
-                              className={`w-full px-1 py-1 border rounded text-center text-sm
-                                focus:outline-none focus:ring-2 focus:ring-blue-400
-                                ${isSeason ? "border-blue-400 bg-blue-50" : "border-gray-300"}`}
+                              className="w-full px-1 py-1 border border-gray-300 rounded text-center text-sm
+                                focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
                           </div>
                         );
