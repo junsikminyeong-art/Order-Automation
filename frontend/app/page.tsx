@@ -928,33 +928,6 @@ export default function Home() {
                       })}
                     </div>
                     <div className="flex gap-2 mt-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const ms = info.monthlySales;
-                          const avg = ms.reduce((a, b) => a + b, 0) / 12;
-                          const seasonMs = ms
-                            .map((v, i) => (v >= avg && v > 0 ? i : null))
-                            .filter((v) => v !== null) as number[];
-                          if (seasonMs.length > 0) {
-                            setSeasonInfos((prev) => {
-                              const updated = [...prev];
-                              updated[mi] = {
-                                ...updated[mi],
-                                seasonMonths: seasonMs.length,
-                              };
-                              return updated;
-                            });
-                          }
-                        }}
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white
-                                   text-xs font-semibold rounded-lg transition"
-                      >
-                        🔄 시즌 기간 자동 적용
-                      </button>
-                      <p className="text-xs text-gray-400 flex items-center">
-                        월평균 이상인 달을 시즌으로 판단합니다
-                      </p>
                     </div>
                   </div>
                 )}
