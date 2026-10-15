@@ -1110,11 +1110,10 @@ export default function Home() {
                     <label className="text-sm text-red-600">전체 적용:</label>
                     <input
                       type="number"
-                      min="0"
-                      max={seasonInfos[mi]?.type === "season" ? (() => { const s = seasonInfos[mi]?.seasonStart || 3; const e = seasonInfos[mi]?.seasonEnd || 10; return s <= e ? e - s + 1 : 12 - s + 1 + e; })() : seasonInfos[mi]?.salesMonths || 12}
+                      max={seasonInfos[mi]?.type === "season" ? (() => { const s = seasonInfos[mi]?.seasonStart || 3; const e = seasonInfos[mi]?.seasonEnd || 10; return (s <= e ? e - s + 1 : 12 - s + 1 + e) * 30; })() : (seasonInfos[mi]?.salesMonths || 12) * 30}
                       defaultValue={0}
                       onChange={(e) => {
-                        const val = Math.min(Number(e.target.value), salesMonths);
+                        const val = Number(e.target.value);
                         if (val >= 0) updateAllOOS(mi, val);
                       }}
                       className="w-14 px-2 py-1 border border-red-300 rounded-lg
@@ -1161,7 +1160,7 @@ export default function Home() {
                             <input
                               type="number"
                               min="0"
-                              max={seasonInfos[mi]?.type === "season" ? (() => { const s = seasonInfos[mi]?.seasonStart || 3; const e = seasonInfos[mi]?.seasonEnd || 10; return s <= e ? e - s + 1 : 12 - s + 1 + e; })() : seasonInfos[mi]?.salesMonths || 12}
+                              max={seasonInfos[mi]?.type === "season" ? (() => { const s = seasonInfos[mi]?.seasonStart || 3; const e = seasonInfos[mi]?.seasonEnd || 10; return (s <= e ? e - s + 1 : 12 - s + 1 + e) * 30; })() : (seasonInfos[mi]?.salesMonths || 12) * 30}
                               defaultValue={0}
                               onChange={(e) => {
                                 const val = Math.min(Number(e.target.value), salesMonths);
@@ -1181,7 +1180,7 @@ export default function Home() {
                               <input
                                 type="number"
                                 min="0"
-                                max={seasonInfos[mi]?.type === "season" ? (() => { const s = seasonInfos[mi]?.seasonStart || 3; const e = seasonInfos[mi]?.seasonEnd || 10; return s <= e ? e - s + 1 : 12 - s + 1 + e; })() : seasonInfos[mi]?.salesMonths || 12}
+                                max={seasonInfos[mi]?.type === "season" ? (() => { const s = seasonInfos[mi]?.seasonStart || 3; const e = seasonInfos[mi]?.seasonEnd || 10; return (s <= e ? e - s + 1 : 12 - s + 1 + e) * 30; })() : (seasonInfos[mi]?.salesMonths || 12) * 30}
                                 value={info.data[color]?.[size] ?? 0}
                                 onChange={(e) => {
                                   const val = Math.min(Number(e.target.value), salesMonths);
