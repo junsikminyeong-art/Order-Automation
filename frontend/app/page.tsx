@@ -385,14 +385,13 @@ export default function Home() {
                 </section>
                 <hr />
                 <section>
-                  <h2 className="text-lg font-bold mb-2">🚚 최근 입고내역 (여러 파일 업로드 가능)</h2>
-                  <p className="text-gray-700 mb-2">최근 입고된 내역을 확인하기 위한 참고 자료입니다.</p>
+                  <h2 className="text-lg font-bold mb-2">📦 미래 입고 예정 (여러 파일 업로드 가능)</h2>
+                  <p className="text-gray-700 mb-2">현재 발주 물량이 입고되기 전에 들어오는 <b>입고 예정 수량</b>을 반영하기 위한 파일입니다.</p>
                   <ul className="list-disc pl-5 text-gray-600 space-y-1">
-                    <li>모델별 / 색상별 / 사이즈별 최근 입고수량을 확인합니다.</li>
-                    <li><b>발주수량 계산에는 직접 영향을 주지 않습니다.</b></li>
-                    <li>계산 결과를 비교하고 검토하기 위한 참고용 데이터입니다.</li>
-                    <li><b>입고일 지정은 필수입니다.</b></li>
-                    <li>입고내역이 없는 경우 <b>"입고내역 없음"</b>을 체크하면 입고 데이터 없이 계산할 수 있습니다.</li>
+                    <li>입고 예정 수량은 <b>현재 재고에 합산</b>되어 발주수량 계산에 반영됩니다.</li>
+                    <li>예: 현재재고 3,000개 + 입고예정 2,000개 = 확보 가능 재고 5,000개</li>
+                    <li>현재 발주 입고 전에 들어오는 물량만 업로드하세요.</li>
+                    <li>입고 예정이 없는 경우 <b>"입고 예정 없음"</b>을 체크하면 됩니다.</li>
                   </ul>
                 </section>
                 <hr />
@@ -608,12 +607,12 @@ export default function Home() {
             />
           </div>
 
-          {/* 최근 입고내역 */}
+          {/* 미래 입고 예정 */}
           <div>
             <p className="text-xs text-gray-400 mb-1">
-              📌 BMS &gt; 발주관리 &gt; 발주현황 &gt; 모델명 검색 &gt; 모델명 클릭 &gt; 가장 최근 입고예정일 P/O 클릭 &gt; 그리드 데이터 엑셀파일 다운
+              📌 BMS &gt; 발주관리 &gt; 발주현황 &gt; 모델명 검색 &gt; 모델명 클릭 &gt; 입고예정 P/O 클릭 &gt; 그리드 데이터 엑셀파일 다운
             </p>
-                        <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1">
               <input
                 type="checkbox"
                 id="noInbound"
@@ -628,18 +627,23 @@ export default function Home() {
                 className="w-4 h-4 accent-blue-500"
               />
               <label htmlFor="noInbound" className="text-sm text-gray-600">
-                입고내역 없음 (참고 데이터 없이 계산)
+                입고 예정 없음
               </label>
             </div>
             {!noInbound && (
               <MultiFileDrop
-                title="🚚 최근 입고내역 (여러 파일 가능)"
+                title="📦 미래 입고 예정 (현재 발주 입고 전에 들어오는 물량)"
                 files={inFiles}
                 onFilesChange={setInFiles}
                 showDates={true}
                 dates={inDates}
                 onDatesChange={setInDates}
               />
+            )}
+            {!noInbound && inFiles.length > 0 && (
+              <p className="text-xs text-gray-400 mt-1">
+                💡 현재 발주 물량이 입고되기 전에 들어오는 수량만 업로드하세요. 입고예정 수량은 현재 재고에 합산되어 계산됩니다.
+              </p>
             )}
           </div>
 
@@ -1003,7 +1007,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <p>📊 판매 데이터: {summary.sales.toLocaleString()}건</p>
                 <p>📦 재고 데이터: {summary.stock.toLocaleString()}건</p>
-                <p>🚚 입고 데이터: {summary.inbound.toLocaleString()}건</p>
+                <p>📦 입고예정 데이터: {summary.inbound.toLocaleString()}건</p>
                 <p>📋 발주 항목: <b>{summary.orders.toLocaleString()}건</b></p>
               </div>
               <p className="mt-2 text-sm text-gray-500">
@@ -1022,7 +1026,7 @@ export default function Home() {
                     <th className="border border-blue-200 px-3 py-2 text-left">모델코드</th>
                     <th className="border border-blue-200 px-3 py-2 text-left">사이즈</th>
                     <th className="border border-blue-200 px-3 py-2 text-right">판매(1기)</th>
-                    <th className="border border-blue-200 px-3 py-2 text-right">입고</th>
+                    <th className="border border-blue-200 px-3 py-2 text-right">입고예정</th>
                     <th className="border border-blue-200 px-3 py-2 text-right">재고</th>
                     <th className="border border-blue-200 px-3 py-2 text-right">1년예상</th>
                     <th className="border border-blue-200 px-3 py-2 text-right font-bold">발주수량</th>

@@ -117,8 +117,9 @@ export function calculateOrders(
         // 성장계수 적용
         growthApplied = annualEstimate * settings.growthFactor;
 
-        // 현재 재고 차감
-        const rawOrderQty = growthApplied - stockQty;
+        // 현재 재고 + 입고예정 차감
+        const totalAvailableStock = stockQty + inbound.qty;
+        const rawOrderQty = growthApplied - totalAvailableStock;
 
                 // 단위 반올림 (사이즈별 패킹단위 우선, 없으면 기본값)
         if (rawOrderQty > 0) {
