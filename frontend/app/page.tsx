@@ -120,6 +120,7 @@ export default function Home() {
         model: req.model,
         type: "allseason" as const,
         seasonMonths: 6,
+        salesMonths: 12,
       }));
       setSeasonInfos(sInfos);
     } catch (err) {
@@ -291,7 +292,7 @@ export default function Home() {
         const settings = getDefaultSettings(modelDate);
         settings.growthFactor = growthFactor;
         settings.orderMonths = orderMonths;
-        settings.salesMonths = salesMonths;  // ← 추가
+        settings.salesMonths = modelSeason?.salesMonths || 12;  // ← 추가
         const modelPacking = packingInfos.find((p) => p.model === request.model);
 
                 // 해당 모델의 품절기간 데이터 찾기
@@ -576,23 +577,6 @@ export default function Home() {
               files={salesFiles}
               onFilesChange={setSalesFiles}
             />
-            {salesFiles.length > 0 && (
-              <div className="mt-2 flex items-center gap-2">
-                <label className="text-sm text-gray-600">📅 판매데이터 기간:</label>
-                <input
-                  type="number"
-                  step="1"
-                  min="1"
-                  max="24"
-                  value={salesMonths}
-                  onChange={(e) => setSalesMonths(Number(e.target.value))}
-                  className="w-16 px-2 py-1 border border-gray-300 rounded-lg
-                             text-center text-sm focus:outline-none
-                             focus:ring-2 focus:ring-blue-400"
-                />
-                <span className="text-xs text-gray-400">개월 (기본 12개월)</span>
-              </div>
-            )}
           </div>
 
           {/* BMS 재고 */}
@@ -681,6 +665,29 @@ export default function Home() {
                 <h4 className="font-bold text-blue-800 mb-3">
                   📦 {info.model} 상품 유형
                 </h4>
+                <div className="flex items-center gap-3 mb-3">
+                  <label className="text-sm text-blue-700 font-semibold">📅 판매데이터 기간:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="24"
+                    value={info.salesMonths}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (val > 0 && val <= 24) {
+                        setSeasonInfos((prev) => {
+                          const updated = [...prev];
+                          updated[mi] = { ...updated[mi], salesMonths: val };
+                          return updated;
+                        });
+                      }
+                    }}
+                    className="w-16 px-2 py-1 border border-blue-300 rounded-lg
+                               text-center text-sm focus:outline-none
+                               focus:ring-2 focus:ring-blue-400"
+                  />
+                  <span className="text-xs text-blue-500">개월 (기본 12개월)</span>
+                </div>
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -845,7 +852,7 @@ export default function Home() {
                     <input
                       type="number"
                       min="0"
-                      max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : salesMonths}
+                      max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : seasonInfos[mi]?.salesMonths || 12}
                       defaultValue={0}
                       onChange={(e) => {
                         const val = Math.min(Number(e.target.value), salesMonths);
@@ -895,7 +902,7 @@ export default function Home() {
                             <input
                               type="number"
                               min="0"
-                              max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : salesMonths}
+                              max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : seasonInfos[mi]?.salesMonths || 12}
                               defaultValue={0}
                               onChange={(e) => {
                                 const val = Math.min(Number(e.target.value), salesMonths);
@@ -915,7 +922,7 @@ export default function Home() {
                               <input
                                 type="number"
                                 min="0"
-                                max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : salesMonths}
+                                max={seasonInfos[mi]?.type === "season" ? seasonInfos[mi]?.seasonMonths : seasonInfos[mi]?.salesMonths || 12}
                                 value={info.data[color]?.[size] ?? 0}
                                 onChange={(e) => {
                                   const val = Math.min(Number(e.target.value), salesMonths);

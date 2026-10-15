@@ -102,6 +102,7 @@ export interface SeasonInfo {
   model: string;
   type: "allseason" | "season";
   seasonMonths: number;
+  salesMonths: number;
 }
 // ─── 저장된 발주 결과 ───
 export interface SavedResult {
