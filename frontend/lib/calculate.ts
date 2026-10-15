@@ -59,7 +59,8 @@ export function calculateOrders(
   packingUnits?: { [size: string]: number },
   outOfStockData?: { [color: string]: { [size: string]: number } },
   seasonType: "allseason" | "season" = "allseason",
-  seasonMonths: number = 6
+  seasonMonths: number = 6,
+  monthlySales: number[] = []
 ): OrderResult[] {
   const results: OrderResult[] = [];
   const elapsedDays = getElapsedDays(settings.inboundDate);
@@ -97,16 +98,57 @@ export function calculateOrders(
       let orderQty = 0;
 
       if (!skip) {
-                        // 품절기간 보정
+        // 품절기간 보정
         const outOfStockMonths = outOfStockData?.[color]?.[size] ?? 0;
         const outOfStockDays = outOfStockMonths * 30;
 
         if (seasonType === "season") {
-          // ─── 시즌 상품 계산 ───
           const seasonDays = seasonMonths * 30;
-          const effectiveSellingDays = Math.max(1, seasonDays - outOfStockDays);
-          const dailyAvg = sales.qty / effectiveSellingDays;
-          annualEstimate = dailyAvg * seasonDays;
+          const nonSeasonMonthCount = 12 - seasonMonths;
+          const nonSeasonDays = nonSeasonMonthCount * 30;
+
+          // 월별 데이터가 있으면 B방식 (시즌/비시즌 분리)
+          const hasMonthlySales = monthlySales.length === 12 && monthlySales.some((v) => v > 0);
+
+          if (hasMonthlySales) {
+            // ─── B방식: 시즌/비시즌 분리 계산 ───
+            // 판매량 높은 순으로 정렬 → 상위 N개월 = 시즌
+            const indexed = monthlySales.map((v, i) => ({ month: i, sales: v }));
+            indexed.sort((a, b) => b.sales - a.sales);
+            const seasonMonthIndices = new Set(
+              indexed.slice(0, seasonMonths).map((m) => m.month)
+            );
+
+            const totalMonthly = monthlySales.reduce((a, b) => a + b, 0);
+            let seasonMonthlyTotal = 0;
+            for (const i of seasonMonthIndices) {
+              seasonMonthlyTotal += monthlySales[i];
+            }
+            const nonSeasonMonthlyTotal = totalMonthly - seasonMonthlyTotal;
+
+            // 비율 계산
+            const seasonRatio = totalMonthly > 0 ? seasonMonthlyTotal / totalMonthly : 1;
+            const nonSeasonRatio = totalMonthly > 0 ? nonSeasonMonthlyTotal / totalMonthly : 0;
+
+            // 색상/사이즈별 판매수량을 비율로 분리
+            const seasonSalesQty = sales.qty * seasonRatio;
+            const nonSeasonSalesQty = sales.qty * nonSeasonRatio;
+
+            // 시즌 계산 (품절기간 = 시즌 내 품절)
+            const effectiveSeasonDays = Math.max(1, seasonDays - outOfStockDays);
+            const seasonDailyAvg = seasonSalesQty / effectiveSeasonDays;
+            const seasonNeed = seasonDailyAvg * seasonDays;
+
+            // 비시즌 계산 (품절 없다고 가정)
+            const nonSeasonNeed = nonSeasonDays > 0 ? nonSeasonSalesQty : 0;
+
+            annualEstimate = seasonNeed + nonSeasonNeed;
+          } else {
+            // ─── A방식: 월별 데이터 없으면 단순 시즌 계산 ───
+            const effectiveSellingDays = Math.max(1, seasonDays - outOfStockDays);
+            const dailyAvg = sales.qty / effectiveSellingDays;
+            annualEstimate = dailyAvg * seasonDays;
+          }
         } else {
           // ─── 사계절 상품 계산 (기존) ───
           const salesPeriodDays = settings.salesMonths * 30;

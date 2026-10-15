@@ -312,7 +312,8 @@ export default function Home() {
           modelPacking?.units,
           modelOOS?.data,
           modelSeason?.type || "allseason",
-          modelSeason?.seasonMonths || 6
+          modelSeason?.seasonMonths || 6,
+          modelSeason?.monthlySales || []
         );
         allResults.push(...modelResults);
       }
@@ -520,6 +521,103 @@ export default function Home() {
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </div>
+
+                                        {/* ⑥ 계산 방식 안내 */}
+                    <div>
+                      <h3 className="font-bold text-yellow-800 mb-1">
+                        ⑥ 발주수량 계산 방식
+                      </h3>
+                      <p className="text-gray-600 mb-3">
+                        상품 유형에 따라 두 가지 방식으로 계산됩니다.
+                      </p>
+
+                      {/* 사계절 상품 */}
+                      <div className="bg-white border border-yellow-200 rounded-lg p-4 mb-3">
+                        <h4 className="font-bold text-gray-800 mb-2">📦 사계절 상품</h4>
+                        <p className="text-sm text-gray-600 mb-2">
+                          연중 고르게 판매되는 상품에 적합합니다. (예: 기본 청바지, 기본 티셔츠)
+                        </p>
+                        <div className="bg-gray-50 rounded p-3 text-sm space-y-1">
+                          <p>① 일평균 판매 = 판매수량 ÷ (판매데이터 기간 - 품절기간)</p>
+                          <p>② 발주 필요수량 = 일평균 × 발주개월수 × 30일</p>
+                          <p>③ 성장계수 적용 = 필요수량 × 성장계수</p>
+                          <p>④ 확보 가능 재고 = 현재 BMS 재고 + 미래 입고 예정</p>
+                          <p className="font-bold text-blue-700">⑤ 최종 발주수량 = ③ - ④ (패킹단위 반올림)</p>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          <p><b>예시)</b> 판매 1,000개 / 12개월 / 품절 2개월 / 발주 8개월 / 성장계수 1.2</p>
+                          <p>일평균 = 1,000 ÷ (360-60) = 3.33개 → 8개월 예상 = 3.33 × 240 = 800개</p>
+                          <p>성장 적용 = 800 × 1.2 = 960개 → 960 - 재고 = 최종 발주수량</p>
+                        </div>
+                      </div>
+
+                      {/* 시즌 상품 */}
+                      <div className="bg-white border border-yellow-200 rounded-lg p-4 mb-3">
+                        <h4 className="font-bold text-gray-800 mb-2">🌞 시즌 상품</h4>
+                        <p className="text-sm text-gray-600 mb-2">
+                          특정 시즌에 판매가 집중되는 상품에 적합합니다. (예: 여름 반바지, 겨울 패딩)<br />
+                          <b>월별 판매량을 입력하면</b> 시즌/비시즌 판매를 자동으로 분리하여 더 정확하게 계산합니다.
+                        </p>
+                        <div className="bg-gray-50 rounded p-3 text-sm space-y-1">
+                          <p className="font-semibold text-blue-700">[시즌 기간 계산]</p>
+                          <p>① 시즌 판매량 = 월별 판매량 중 시즌 해당 월 합산</p>
+                          <p>② 시즌 일평균 = 시즌 판매량 ÷ (시즌 기간 - 시즌 내 품절기간)</p>
+                          <p>③ 시즌 필요수량 = 시즌 일평균 × 시즌 기간</p>
+                          <p className="font-semibold text-green-700 mt-2">[비시즌 기간 계산]</p>
+                          <p>④ 비시즌 판매량 = 월별 판매량 중 비시즌 해당 월 합산</p>
+                          <p>⑤ 비시즌 일평균 = 비시즌 판매량 ÷ (비시즌 기간 - 비시즌 내 품절기간)</p>
+                          <p>⑥ 비시즌 필요수량 = 비시즌 일평균 × 비시즌 기간</p>
+                          <p className="font-semibold text-purple-700 mt-2">[최종 발주]</p>
+                          <p>⑦ 총 필요수량 = 시즌 필요 + 비시즌 필요</p>
+                          <p>⑧ 성장계수 적용 = 총 필요수량 × 성장계수</p>
+                          <p>⑨ 확보 가능 재고 = 현재 BMS 재고 + 미래 입고 예정</p>
+                          <p className="font-bold text-blue-700">⑩ 최종 발주수량 = ⑧ - ⑨ (패킹단위 반올림)</p>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          <p><b>예시)</b> 시즌 3~9월(7개월) / 시즌 내 품절 2개월 / 성장계수 1.2</p>
+                          <p>월별: 3월 5,000 / 4월 5,000 / ... / 9월 5,000 → 시즌 합계: 35,000개</p>
+                          <p>월별: 10월 500 / 11월 500 / ... / 2월 500 → 비시즌 합계: 2,500개</p>
+                          <p>시즌 일평균 = 35,000 ÷ (210-60) = 233개 → 시즌 필요 = 233 × 210 = <b>49,000개</b></p>
+                          <p>비시즌 일평균 = 2,500 ÷ 150 = 16.7개 → 비시즌 필요 = 16.7 × 150 = <b>2,500개</b></p>
+                          <p>총 필요 = 49,000 + 2,500 = 51,500 × 1.2 = 61,800 - 재고 = 최종 발주수량</p>
+                        </div>
+                      </div>
+
+                      {/* 왜 시즌 구분이 필요한가 */}
+                      <div className="bg-white border border-yellow-200 rounded-lg p-4">
+                        <h4 className="font-bold text-gray-800 mb-2">❓ 왜 시즌 구분이 필요한가?</h4>
+                        <p className="text-sm text-gray-600 mb-2">
+                          시즌 상품을 사계절 방식으로 계산하면, 비시즌의 낮은 판매량이 일평균을 끌어내려
+                          <b> 시즌에 필요한 발주수량이 과소 산정</b>됩니다.
+                        </p>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm border-collapse">
+                            <thead>
+                              <tr className="bg-gray-100">
+                                <th className="border px-2 py-1.5 text-left">계산 방식</th>
+                                <th className="border px-2 py-1.5 text-left">일평균</th>
+                                <th className="border px-2 py-1.5 text-left">시즌 발주</th>
+                                <th className="border px-2 py-1.5 text-left">문제점</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td className="border px-2 py-1.5">사계절 방식</td>
+                                <td className="border px-2 py-1.5">37,500 ÷ 360 = <b>104개</b></td>
+                                <td className="border px-2 py-1.5">104 × 210 = 21,875개</td>
+                                <td className="border px-2 py-1.5 text-red-600">❌ 시즌 수요 과소 추정</td>
+                              </tr>
+                              <tr className="bg-blue-50">
+                                <td className="border px-2 py-1.5">시즌 분리 방식</td>
+                                <td className="border px-2 py-1.5">35,000 ÷ 210 = <b>166개</b></td>
+                                <td className="border px-2 py-1.5">166 × 210 = 35,000개</td>
+                                <td className="border px-2 py-1.5 text-green-600">✅ 정확한 시즌 수요 반영</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>         
                   </div>
