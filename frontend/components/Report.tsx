@@ -12,12 +12,14 @@ type Props = {
   growthFactor: number;
   orderMonths: number;
   salesMonths: number;
+  orderDeliveryDate: string;
+  coverEndDate: string;
   memo: string;
   onMemoChange: (memo: string) => void;
   onClose: () => void;
 };
 
-export default function Report({ results, growthFactor, orderMonths, salesMonths, memo, onMemoChange, onClose }: Props) {
+export default function Report({ results, growthFactor, orderMonths, salesMonths, orderDeliveryDate, coverEndDate, memo, onMemoChange, onClose }: Props) {
   const models = [...new Set(results.map((r) => r.model))];
   const [selectedModel, setSelectedModel] = useState(models[0] || "");
 
@@ -55,6 +57,8 @@ export default function Report({ results, growthFactor, orderMonths, salesMonths
       annualEstimate: r.annualEstimate,
       growthApplied: r.growthApplied,
       orderQty: r.orderQty,
+      remainingStockAtDelivery: r.remainingStockAtDelivery,
+      coverNeed: r.coverNeed,
     }));
 
   const modelSummary = models.map((model) => {
@@ -303,12 +307,7 @@ export default function Report({ results, growthFactor, orderMonths, salesMonths
                                   </p>
 
                                   <p className="text-gray-600">
-                                    ② 판매데이터 기간:
-                                  </p>
-                                  <p className="font-semibold">{salesMonths * 30}일 (최근 {salesMonths}개월)</p>
-
-                                  <p className="text-gray-600">
-                                    ③ 품절기간:
+                                    ② 품절기간:
                                   </p>
                                   <p className="font-semibold">
                                     {d.outOfStockDays > 0
@@ -318,46 +317,73 @@ export default function Report({ results, growthFactor, orderMonths, salesMonths
                                   </p>
 
                                   <p className="text-gray-600">
-                                    ④ 실제 판매 가능일:
-                                  </p>
-                                  <p className="font-semibold">
-                                    {salesMonths * 30} - {d.outOfStockDays} = {salesMonths * 30 - d.outOfStockDays}일
-                                  </p>
-
-                                  <p className="text-gray-600">
-                                    ⑤ 일평균 판매:
+                                    ③ 일평균 판매:
                                   </p>
                                   <p className="font-semibold">
                                     {d.판매} ÷ {Math.max(1, salesMonths * 30 - d.outOfStockDays)} ={" "}
                                     {(d.판매 / Math.max(1, salesMonths * 30 - d.outOfStockDays)).toFixed(2)}개/일
+                                    <span className="text-gray-400 text-xs ml-1">
+                                      ({salesMonths * 30}일 - 품절{d.outOfStockDays}일 = {salesMonths * 30 - d.outOfStockDays}일 기준)
+                                    </span>
+                                  </p>
+
+                                  <p className="text-gray-600 font-semibold text-indigo-700 col-span-2 mt-2 border-t pt-2">
+                                    📦 재고 시뮬레이션 (오늘 → {orderDeliveryDate})
                                   </p>
 
                                   <p className="text-gray-600">
-                                    ⑥ {orderMonths}개월 판매예상:
+                                    ④ 현재 BMS 재고:
                                   </p>
                                   <p className="font-semibold">
-                                    {(d.판매 / Math.max(1, salesMonths * 30 - d.outOfStockDays)).toFixed(2)} × {orderMonths * 30} ={" "}
-                                    {d.annualEstimate.toLocaleString()}개
+                                    {d.재고.toLocaleString()}개
                                   </p>
 
                                   <p className="text-gray-600">
-                                    ⑦ 성장계수 {growthFactor}× 적용:
+                                    ⑤ 입고 예정:
                                   </p>
                                   <p className="font-semibold">
-                                    {d.annualEstimate.toLocaleString()} × {growthFactor} ={" "}
+                                    +{d.입고.toLocaleString()}개
+                                  </p>
+
+                                  <p className="text-gray-600">
+                                    ⑥ 발주 입고일 예상 잔여재고:
+                                  </p>
+                                  <p className="font-semibold text-orange-600">
+                                    {d.remainingStockAtDelivery.toLocaleString()}개
+                                    <span className="text-gray-400 text-xs ml-1">
+                                      (일별 판매 차감 시뮬레이션 결과)
+                                    </span>
+                                  </p>
+
+                                  <p className="text-gray-600 font-semibold text-indigo-700 col-span-2 mt-2 border-t pt-2">
+                                    📊 커버 기간 ({orderDeliveryDate} → {coverEndDate})
+                                  </p>
+
+                                  <p className="text-gray-600">
+                                    ⑦ 커버 기간 필요수량:
+                                  </p>
+                                  <p className="font-semibold">
+                                    {d.coverNeed.toLocaleString()}개
+                                  </p>
+
+                                  <p className="text-gray-600">
+                                    ⑧ 성장계수 {growthFactor}× 적용:
+                                  </p>
+                                  <p className="font-semibold">
+                                    {d.coverNeed.toLocaleString()} × {growthFactor} ={" "}
                                     {d.growthApplied.toLocaleString()}개
                                   </p>
 
                                   <p className="text-gray-600">
-                                    ⑧ BMS 재고 차감:
+                                    ⑨ 잔여재고 차감:
                                   </p>
                                   <p className="font-semibold">
-                                    {d.growthApplied.toLocaleString()} - {d.재고.toLocaleString()} ={" "}
-                                    {(d.growthApplied - d.재고).toLocaleString()}개
+                                    {d.growthApplied.toLocaleString()} - {d.remainingStockAtDelivery.toLocaleString()} ={" "}
+                                    {(d.growthApplied - d.remainingStockAtDelivery).toLocaleString()}개
                                   </p>
 
                                   <p className="text-gray-600">
-                                    ⑨ 패킹단위 {d.packingUnit}개 반올림:
+                                    ⑩ 패킹단위 {d.packingUnit}개 반올림:
                                   </p>
                                   <p className="font-bold text-lg text-blue-700">
                                     → {d.발주 > 0 ? `${d.발주.toLocaleString()}개` : "0개 (발주 불필요)"}

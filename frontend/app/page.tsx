@@ -1401,6 +1401,8 @@ export default function Home() {
             growthFactor={growthFactor}
             orderMonths={orderMonths}
             salesMonths={salesMonths}
+            orderDeliveryDate={orderDeliveryDate}
+            coverEndDate={coverEndDate}
             memo={memo}
             onMemoChange={setMemo}
             onClose={() => setShowReport(false)}
