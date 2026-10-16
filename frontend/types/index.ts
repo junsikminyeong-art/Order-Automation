@@ -60,7 +60,7 @@ export interface OrderResult {
   orderQty: number;       // 최종 발주수량 (단위 반올림)
   skip: boolean;          // 발주 제외 여부
   skipReason?: string;    // 제외 사유
-  outOfStockMonths: number;   // ← 추가
+  outOfStockDays: number;     // ← 일수 단위
   packingUnit: number;        // ← 추가
 }
 

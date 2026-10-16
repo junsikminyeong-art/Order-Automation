@@ -1353,6 +1353,7 @@ export default function Home() {
             results={results}
             growthFactor={growthFactor}
             orderMonths={orderMonths}
+            salesMonths={salesMonths}
             memo={memo}
             onMemoChange={setMemo}
             onClose={() => setShowReport(false)}

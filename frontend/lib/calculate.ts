@@ -149,6 +149,12 @@ export function calculateOrders(
             const dailyAvg = sales.qty / effectiveSellingDays;
             annualEstimate = dailyAvg * seasonDays;
           }
+        } else {
+          // ─── 사계절 상품 계산 ───
+          const totalSellingDays = settings.salesMonths * 30;
+          const effectiveSellingDays = Math.max(1, totalSellingDays - outOfStockDays);
+          const dailyAvg = sales.qty / effectiveSellingDays;
+          annualEstimate = dailyAvg * settings.orderMonths * 30;
         }
 
         // 성장계수 적용
@@ -190,7 +196,7 @@ export function calculateOrders(
         orderQty,
         skip,
         skipReason,
-        outOfStockMonths: outOfStockData?.[color]?.[size] ?? 0,
+        outOfStockDays: outOfStockData?.[color]?.[size] ?? 0,
         packingUnit: packingUnits?.[size] ?? 1,
       });
     }

@@ -11,12 +11,13 @@ type Props = {
   results: OrderResult[];
   growthFactor: number;
   orderMonths: number;
+  salesMonths: number;
   memo: string;
   onMemoChange: (memo: string) => void;
   onClose: () => void;
 };
 
-export default function Report({ results, growthFactor, orderMonths, memo, onMemoChange, onClose }: Props) {
+export default function Report({ results, growthFactor, orderMonths, salesMonths, memo, onMemoChange, onClose }: Props) {
   const models = [...new Set(results.map((r) => r.model))];
   const [selectedModel, setSelectedModel] = useState(models[0] || "");
 
@@ -49,7 +50,7 @@ export default function Report({ results, growthFactor, orderMonths, memo, onMem
       입고: r.inboundQty,
       skip: r.skip,
       skipReason: r.skipReason || "",
-      outOfStockMonths: r.outOfStockMonths,
+      outOfStockDays: r.outOfStockDays,
       packingUnit: r.packingUnit,
       annualEstimate: r.annualEstimate,
       growthApplied: r.growthApplied,
@@ -304,15 +305,15 @@ export default function Report({ results, growthFactor, orderMonths, memo, onMem
                                   <p className="text-gray-600">
                                     ② 판매데이터 기간:
                                   </p>
-                                  <p className="font-semibold">365일 (최근 1년)</p>
+                                  <p className="font-semibold">{salesMonths * 30}일 (최근 {salesMonths}개월)</p>
 
                                   <p className="text-gray-600">
                                     ③ 품절기간:
                                   </p>
                                   <p className="font-semibold">
-                                    {d.outOfStockMonths > 0
-                                      ? `${d.outOfStockMonths}개월 (${d.outOfStockMonths * 30}일)`
-                                      : "없음 (0개월)"
+                                    {d.outOfStockDays > 0
+                                      ? `${d.outOfStockDays}일`
+                                      : "없음 (0일)"
                                     }
                                   </p>
 
@@ -320,22 +321,22 @@ export default function Report({ results, growthFactor, orderMonths, memo, onMem
                                     ④ 실제 판매 가능일:
                                   </p>
                                   <p className="font-semibold">
-                                    365 - {d.outOfStockMonths * 30} = {365 - d.outOfStockMonths * 30}일
+                                    {salesMonths * 30} - {d.outOfStockDays} = {salesMonths * 30 - d.outOfStockDays}일
                                   </p>
 
                                   <p className="text-gray-600">
                                     ⑤ 일평균 판매:
                                   </p>
                                   <p className="font-semibold">
-                                    {d.판매} ÷ {365 - d.outOfStockMonths * 30} ={" "}
-                                    {((d.판매) / Math.max(1, 365 - d.outOfStockMonths * 30)).toFixed(2)}개/일
+                                    {d.판매} ÷ {Math.max(1, salesMonths * 30 - d.outOfStockDays)} ={" "}
+                                    {(d.판매 / Math.max(1, salesMonths * 30 - d.outOfStockDays)).toFixed(2)}개/일
                                   </p>
 
                                   <p className="text-gray-600">
                                     ⑥ {orderMonths}개월 판매예상:
                                   </p>
                                   <p className="font-semibold">
-                                    {((d.판매) / Math.max(1, 365 - d.outOfStockMonths * 30)).toFixed(2)} × {orderMonths * 30} ={" "}
+                                    {(d.판매 / Math.max(1, salesMonths * 30 - d.outOfStockDays)).toFixed(2)} × {orderMonths * 30} ={" "}
                                     {d.annualEstimate.toLocaleString()}개
                                   </p>
 
@@ -370,11 +371,11 @@ export default function Report({ results, growthFactor, orderMonths, memo, onMem
                                   💡 판단:{" "}
                                   {d.skip ? (
                                     <span className="text-red-600">{d.skipReason}</span>
-                                  ) : d.outOfStockMonths > 0 && d.판매 > 0 ? (
+                                  ) : d.outOfStockDays > 0 && d.판매 > 0 ? (
                                     <span className="text-green-700">
-                                      품절 {d.outOfStockMonths}개월에도 {d.판매.toLocaleString()}개 판매
+                                      품절 {d.outOfStockDays}일에도 {d.판매.toLocaleString()}개 판매
                                       → 실제 수요 높음 (일평균{" "}
-                                      {((d.판매) / Math.max(1, 365 - d.outOfStockMonths * 30)).toFixed(1)}개)
+                                      {(d.판매 / Math.max(1, salesMonths * 30 - d.outOfStockDays)).toFixed(1)}개)
                                       → 발주 권장
                                     </span>
                                   ) : d.판매 > 0 && d.재고 === 0 ? (
