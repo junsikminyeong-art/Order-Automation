@@ -88,7 +88,6 @@ export interface CalcSettings {
   orderDeliveryDate: Date;    // 발주 입고 예정일
   coverEndDate: Date;         // 커버 종료일
 }
-}
 
 // ─── 입고 파일 + 날짜 쌍 ───
 export interface InboundFileEntry {
