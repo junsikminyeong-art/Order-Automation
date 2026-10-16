@@ -29,6 +29,87 @@ function roundToUnit(qty: number, unit: number): number {
 }
 
 /**
+ * 특정 월이 시즌 기간인지 판별
+ */
+function isInSeason(month: number, seasonStart: number, seasonEnd: number): boolean {
+  if (seasonStart <= seasonEnd) {
+    return month >= seasonStart && month <= seasonEnd;
+  }
+  return month >= seasonStart || month <= seasonEnd;
+}
+
+/**
+ * 재고 시뮬레이션: startDate → endDate 까지 일별 재고 추적
+ * - 매일 시즌/비시즌 일평균만큼 차감
+ * - 입고 스케줄 도착일에 수량 추가
+ * - 재고 0 이하면 0 유지
+ */
+function simulateRemainingStock(
+  currentStock: number,
+  schedule: { date: Date; qty: number }[],
+  seasonDailyAvg: number,
+  offSeasonDailyAvg: number,
+  seasonStart: number,
+  seasonEnd: number,
+  startDate: Date,
+  endDate: Date
+): number {
+  let stock = currentStock;
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (current < end) {
+    for (const s of schedule) {
+      const d = new Date(s.date);
+      d.setHours(0, 0, 0, 0);
+      if (current.getTime() === d.getTime()) {
+        stock += s.qty;
+      }
+    }
+
+    const month = current.getMonth() + 1;
+    const avg = isInSeason(month, seasonStart, seasonEnd)
+      ? seasonDailyAvg
+      : offSeasonDailyAvg;
+    stock = Math.max(0, stock - avg);
+
+    current.setDate(current.getDate() + 1);
+  }
+
+  return Math.max(0, Math.round(stock));
+}
+
+/**
+ * 커버 기간 필요수량: startDate → endDate 까지 일별 필요량 합산
+ */
+function calculateCoverNeed(
+  seasonDailyAvg: number,
+  offSeasonDailyAvg: number,
+  seasonStart: number,
+  seasonEnd: number,
+  startDate: Date,
+  endDate: Date
+): number {
+  let total = 0;
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (current < end) {
+    const month = current.getMonth() + 1;
+    total += isInSeason(month, seasonStart, seasonEnd)
+      ? seasonDailyAvg
+      : offSeasonDailyAvg;
+    current.setDate(current.getDate() + 1);
+  }
+
+  return Math.round(total);
+}
+
+/**
  * 발주수량 계산 — 핵심 로직
  *
  * 계산 흐름:
@@ -61,7 +142,8 @@ export function calculateOrders(
   seasonType: "allseason" | "season" = "allseason",
   seasonStart: number = 3,
   seasonEnd: number = 10,
-  monthlySales: number[] = []
+  monthlySales: number[] = [],
+  inboundSchedule: { date: Date; model: string; color: string; size: string; qty: number }[] = []
 ): OrderResult[] {
   const results: OrderResult[] = [];
   const elapsedDays = getElapsedDays(settings.inboundDate);
@@ -97,13 +179,17 @@ export function calculateOrders(
       let annualEstimate = 0;
       let growthApplied = 0;
       let orderQty = 0;
+      let remainingStock = stockQty;
+      let coverNeedValue = 0;
 
       if (!skip) {
-        // 품절기간 보정
-          const outOfStockDays = outOfStockData?.[color]?.[size] ?? 0;
+        const outOfStockDays = outOfStockData?.[color]?.[size] ?? 0;
 
-                if (seasonType === "season") {
-          // 시즌 월 목록 계산 (예: 3~10월 또는 11~2월 같은 연도 넘기는 경우도 처리)
+        // ─── 일평균 계산 (시즌/비시즌) ───
+        let seasonDailyAvg = 0;
+        let offSeasonDailyAvg = 0;
+
+        if (seasonType === "season") {
           const seasonMonthIndices: number[] = [];
           if (seasonStart <= seasonEnd) {
             for (let m = seasonStart; m <= seasonEnd; m++) seasonMonthIndices.push(m - 1);
@@ -114,18 +200,15 @@ export function calculateOrders(
 
           const seasonMonthCount = seasonMonthIndices.length;
           const nonSeasonMonthCount = 12 - seasonMonthCount;
-          const seasonDays = seasonMonthCount * 30;
-          const nonSeasonDays = nonSeasonMonthCount * 30;
+          const sDays = seasonMonthCount * 30;
+          const nsDays = nonSeasonMonthCount * 30;
 
           const hasMonthlySales = monthlySales.length === 12 && monthlySales.some((v) => v > 0);
 
           if (hasMonthlySales) {
-            // ─── B방식: 시즌/비시즌 분리 계산 ───
             const totalMonthly = monthlySales.reduce((a, b) => a + b, 0);
             let seasonMonthlyTotal = 0;
-            for (const i of seasonMonthIndices) {
-              seasonMonthlyTotal += monthlySales[i];
-            }
+            for (const i of seasonMonthIndices) seasonMonthlyTotal += monthlySales[i];
             const nonSeasonMonthlyTotal = totalMonthly - seasonMonthlyTotal;
 
             const seasonRatio = totalMonthly > 0 ? seasonMonthlyTotal / totalMonthly : 1;
@@ -134,37 +217,50 @@ export function calculateOrders(
             const seasonSalesQty = sales.qty * seasonRatio;
             const nonSeasonSalesQty = sales.qty * nonSeasonRatio;
 
-            // 시즌 계산 (품절기간 = 시즌 내 품절)
-            const effectiveSeasonDays = Math.max(1, seasonDays - outOfStockDays);
-            const seasonDailyAvg = seasonSalesQty / effectiveSeasonDays;
-            const seasonNeed = seasonDailyAvg * seasonDays;
-
-            // 비시즌 계산
-            const nonSeasonNeed = nonSeasonDays > 0 ? nonSeasonSalesQty : 0;
-
-            annualEstimate = seasonNeed + nonSeasonNeed;
+            const effectiveSeasonDays = Math.max(1, sDays - outOfStockDays);
+            seasonDailyAvg = seasonSalesQty / effectiveSeasonDays;
+            offSeasonDailyAvg = nsDays > 0 ? nonSeasonSalesQty / nsDays : 0;
           } else {
-            // ─── A방식: 월별 데이터 없으면 단순 시즌 계산 ───
-            const effectiveSellingDays = Math.max(1, seasonDays - outOfStockDays);
-            const dailyAvg = sales.qty / effectiveSellingDays;
-            annualEstimate = dailyAvg * seasonDays;
+            const effectiveSeasonDays = Math.max(1, sDays - outOfStockDays);
+            seasonDailyAvg = sales.qty / effectiveSeasonDays;
+            offSeasonDailyAvg = 0;
           }
         } else {
-          // ─── 사계절 상품 계산 ───
+          // 사계절 상품
           const totalSellingDays = settings.salesMonths * 30;
           const effectiveSellingDays = Math.max(1, totalSellingDays - outOfStockDays);
           const dailyAvg = sales.qty / effectiveSellingDays;
-          annualEstimate = dailyAvg * settings.orderMonths * 30;
+          seasonDailyAvg = dailyAvg;
+          offSeasonDailyAvg = dailyAvg;
         }
 
-        // 성장계수 적용
-        growthApplied = annualEstimate * settings.growthFactor;
+        // ─── 재고 시뮬레이션: 오늘 → 발주 입고일 ───
+        const baseColor = color.replace(/^(ZZ|JP|KR|US|EU|CN|HK|TW)/i, "");
+        const relevantSchedule = inboundSchedule
+          .filter(ib => ib.model === model && ib.size === size &&
+            ib.color.replace(/^(ZZ|JP|KR|US|EU|CN|HK|TW)/i, "") === baseColor)
+          .map(ib => ({ date: ib.date, qty: ib.qty }));
 
-        // 현재 재고 + 입고예정 차감
-        const totalAvailableStock = stockQty + inbound.qty;
-        const rawOrderQty = growthApplied - totalAvailableStock;
+        remainingStock = simulateRemainingStock(
+          stockQty, relevantSchedule,
+          seasonDailyAvg, offSeasonDailyAvg,
+          seasonStart, seasonEnd,
+          new Date(), settings.orderDeliveryDate
+        );
 
-                // 단위 반올림 (사이즈별 패킹단위 우선, 없으면 기본값)
+        // ─── 커버 기간 필요수량: 발주 입고일 → 커버 종료일 ───
+        coverNeedValue = calculateCoverNeed(
+          seasonDailyAvg, offSeasonDailyAvg,
+          seasonStart, seasonEnd,
+          settings.orderDeliveryDate, settings.coverEndDate
+        );
+
+        annualEstimate = coverNeedValue;
+        growthApplied = Math.round(coverNeedValue * settings.growthFactor);
+
+        const rawOrderQty = growthApplied - remainingStock;
+
+        // 단위 반올림
         if (rawOrderQty > 0) {
           const unit = packingUnits?.[size] ?? 1;
           orderQty = roundToUnit(rawOrderQty, unit);
@@ -198,6 +294,8 @@ export function calculateOrders(
         skipReason,
         outOfStockDays: outOfStockData?.[color]?.[size] ?? 0,
         packingUnit: packingUnits?.[size] ?? 1,
+        remainingStockAtDelivery: remainingStock,
+        coverNeed: coverNeedValue,
       });
     }
   }
@@ -209,6 +307,11 @@ export function calculateOrders(
  * 기본 설정값
  */
 export function getDefaultSettings(inboundDate: Date): CalcSettings {
+  const deliveryDate = new Date();
+  deliveryDate.setMonth(deliveryDate.getMonth() + 1);
+  const coverEnd = new Date(deliveryDate);
+  coverEnd.setMonth(coverEnd.getMonth() + 12);
+
   return {
     inboundDate,
     growthFactor: 1.2,
@@ -218,5 +321,7 @@ export function getDefaultSettings(inboundDate: Date): CalcSettings {
     minSalesThreshold: 0,
     orderMonths: 12,
     salesMonths: 12,
+    orderDeliveryDate: deliveryDate,
+    coverEndDate: coverEnd,
   };
 }

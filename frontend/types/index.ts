@@ -60,8 +60,19 @@ export interface OrderResult {
   orderQty: number;       // 최종 발주수량 (단위 반올림)
   skip: boolean;          // 발주 제외 여부
   skipReason?: string;    // 제외 사유
-  outOfStockDays: number;     // ← 일수 단위
-  packingUnit: number;        // ← 추가
+  outOfStockDays: number;              // 품절기간 (일수)
+  packingUnit: number;                 // 패킹단위
+  remainingStockAtDelivery: number;    // 발주 입고일 예상 잔여재고
+  coverNeed: number;                   // 커버 기간 필요수량
+}
+
+// ─── 입고 스케줄 항목 (날짜별) ───
+export interface InboundScheduleEntry {
+  date: Date;
+  model: string;
+  color: string;
+  size: string;
+  qty: number;
 }
 
 // ─── 계산 설정 (사용자 조정 가능) ───
@@ -72,8 +83,11 @@ export interface CalcSettings {
   excludeColors: string[];    // 제외 색상
   excludeSizes: string[];     // 제외 사이즈
   minSalesThreshold: number;  // 최소 판매량 이하 제외 (기본 0)
-  orderMonths: number;        // ← 이 줄 추가 (발주 개월수)
-  salesMonths: number;  // ← 추가
+  orderMonths: number;        // 발주 개월수
+  salesMonths: number;        // 판매데이터 기간
+  orderDeliveryDate: Date;    // 발주 입고 예정일
+  coverEndDate: Date;         // 커버 종료일
+}
 }
 
 // ─── 입고 파일 + 날짜 쌍 ───

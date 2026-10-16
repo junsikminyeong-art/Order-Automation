@@ -31,7 +31,9 @@ export default function Home() {
   // ─── 계산 설정 ───
   const [growthFactor, setGrowthFactor] = useState<number>(1.2);
   const [orderMonths, setOrderMonths] = useState<number>(12);
-  const [salesMonths, setSalesMonths] = useState<number>(12);  // ← 추가
+  const [salesMonths, setSalesMonths] = useState<number>(12);
+  const [orderDeliveryDate, setOrderDeliveryDate] = useState<string>("");
+  const [coverEndDate, setCoverEndDate] = useState<string>("");
 
   // ─── 패킹 단위 ───
   const [packingInfos, setPackingInfos] = useState<PackingInfo[]>([]);
@@ -77,7 +79,9 @@ export default function Home() {
   const canCalculate =
     salesFiles.length > 0 &&
     stockFile &&
-    orderFile;
+    orderFile &&
+    orderDeliveryDate &&
+    coverEndDate;
 
   // ─── 발주 요청 파일 업로드 시 즉시 파싱 ───
     const handleOrderFileChange = async (file: File | null) => {
@@ -287,6 +291,24 @@ export default function Home() {
 
       const orderRequests = parseOrderRequest(orderWb);
 
+      // ─── 입고 스케줄 구축 (날짜별) ───
+      const inboundScheduleAll: { date: Date; model: string; color: string; size: string; qty: number }[] = [];
+      inboundWorkbooks.forEach((wb, i) => {
+        const items = parseInboundData(wb);
+        const fileDate = new Date(inDates[i]);
+        for (const item of items) {
+          if (item.qty > 0) {
+            inboundScheduleAll.push({
+              date: fileDate,
+              model: item.modelGroup,
+              color: item.color,
+              size: item.size,
+              qty: item.qty,
+            });
+          }
+        }
+      });
+
       const allResults: OrderResult[] = [];
 
       for (const request of orderRequests) {
@@ -295,6 +317,8 @@ export default function Home() {
         const settings = getDefaultSettings(modelDate);
         settings.growthFactor = growthFactor;
         settings.orderMonths = orderMonths;
+        settings.orderDeliveryDate = new Date(orderDeliveryDate);
+        settings.coverEndDate = new Date(coverEndDate);
         const modelPacking = packingInfos.find((p) => p.model === request.model);
 
                 // 해당 모델의 품절기간 데이터 찾기
@@ -316,7 +340,8 @@ export default function Home() {
           modelSeason?.type || "allseason",
           modelSeason?.seasonStart || 3,
           modelSeason?.seasonEnd || 10,
-          modelSeason?.monthlySales || []
+          modelSeason?.monthlySales || [],
+          inboundScheduleAll
         );
         allResults.push(...modelResults);
       }
@@ -1208,6 +1233,28 @@ export default function Home() {
         <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <h3 className="text-sm font-bold text-gray-600 mb-3">⚙️ 계산 설정</h3>
           <div className="flex gap-6 flex-wrap">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">발주 입고 예정일</label>
+              <input
+                type="date"
+                value={orderDeliveryDate}
+                onChange={(e) => setOrderDeliveryDate(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg
+                           text-sm text-gray-700 focus:outline-none
+                           focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">커버 종료일</label>
+              <input
+                type="date"
+                value={coverEndDate}
+                onChange={(e) => setCoverEndDate(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg
+                           text-sm text-gray-700 focus:outline-none
+                           focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">발주 개월수</label>
               <input
