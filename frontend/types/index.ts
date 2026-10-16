@@ -64,6 +64,8 @@ export interface OrderResult {
   packingUnit: number;                 // 패킹단위
   remainingStockAtDelivery: number;    // 발주 입고일 예상 잔여재고
   coverNeed: number;                   // 커버 기간 필요수량
+  seasonDailyAvg: number;             // 시즌 일평균 판매
+  offSeasonDailyAvg: number;          // 비시즌 일평균 판매
 }
 
 // ─── 입고 스케줄 항목 (날짜별) ───

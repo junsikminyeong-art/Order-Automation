@@ -59,6 +59,8 @@ export default function Report({ results, growthFactor, orderMonths, salesMonths
       orderQty: r.orderQty,
       remainingStockAtDelivery: r.remainingStockAtDelivery,
       coverNeed: r.coverNeed,
+      seasonDailyAvg: r.seasonDailyAvg,
+      offSeasonDailyAvg: r.offSeasonDailyAvg,
     }));
 
   const modelSummary = models.map((model) => {
@@ -320,11 +322,19 @@ export default function Report({ results, growthFactor, orderMonths, salesMonths
                                     ③ 일평균 판매:
                                   </p>
                                   <p className="font-semibold">
-                                    {d.판매} ÷ {Math.max(1, salesMonths * 30 - d.outOfStockDays)} ={" "}
-                                    {(d.판매 / Math.max(1, salesMonths * 30 - d.outOfStockDays)).toFixed(2)}개/일
-                                    <span className="text-gray-400 text-xs ml-1">
-                                      ({salesMonths * 30}일 - 품절{d.outOfStockDays}일 = {salesMonths * 30 - d.outOfStockDays}일 기준)
-                                    </span>
+                                    {d.seasonDailyAvg === d.offSeasonDailyAvg ? (
+                                      <>
+                                        {d.seasonDailyAvg.toFixed(2)}개/일
+                                        <span className="text-gray-400 text-xs ml-1">
+                                          (사계절 동일)
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        시즌 {d.seasonDailyAvg.toFixed(2)}개/일 &nbsp;|&nbsp;
+                                        비시즌 {d.offSeasonDailyAvg.toFixed(2)}개/일
+                                      </>
+                                    )}
                                   </p>
 
                                   <p className="text-gray-600 font-semibold text-indigo-700 col-span-2 mt-2 border-t pt-2">

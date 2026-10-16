@@ -181,13 +181,11 @@ export function calculateOrders(
       let orderQty = 0;
       let remainingStock = stockQty;
       let coverNeedValue = 0;
+      let seasonDailyAvg = 0;
+      let offSeasonDailyAvg = 0;
 
       if (!skip) {
         const outOfStockDays = outOfStockData?.[color]?.[size] ?? 0;
-
-        // ─── 일평균 계산 (시즌/비시즌) ───
-        let seasonDailyAvg = 0;
-        let offSeasonDailyAvg = 0;
 
         if (seasonType === "season") {
           const seasonMonthIndices: number[] = [];
@@ -296,6 +294,8 @@ export function calculateOrders(
         packingUnit: packingUnits?.[size] ?? 1,
         remainingStockAtDelivery: remainingStock,
         coverNeed: coverNeedValue,
+        seasonDailyAvg: skip ? 0 : seasonDailyAvg,
+        offSeasonDailyAvg: skip ? 0 : offSeasonDailyAvg,
       });
     }
   }
